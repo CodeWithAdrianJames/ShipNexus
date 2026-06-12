@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Env files — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+.next/
+build/
+
+# Local volumes & caches
+.localstack/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
