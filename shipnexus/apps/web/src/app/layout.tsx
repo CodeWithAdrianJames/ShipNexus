@@ -1,11 +1,7 @@
-import type { Metadata } from 'next';
-import { Geist_Mono }    from 'next/font/google';
+import type { Metadata }  from 'next';
+import { GeistSans }      from 'geist/font/sans';
+import { GeistMono }      from 'geist/font/mono';
 import './globals.css';
-
-const mono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-});
 
 export const metadata: Metadata = {
   title:       'ShipNexus',
@@ -18,7 +14,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={mono.variable}>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+    >
       <body className="antialiased">{children}</body>
     </html>
   );

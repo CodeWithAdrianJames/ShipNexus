@@ -36,6 +36,7 @@ export default function DeploymentDashboard({ initialJobs }: Props) {
   }, [router]);
 
   function handleManualRefresh() {
+    if (ticking) return;
     setTicking(true);
     router.refresh();
     setRefresh(new Date());
@@ -69,7 +70,10 @@ export default function DeploymentDashboard({ initialJobs }: Props) {
           </span>
           <button
             onClick={handleManualRefresh}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all ${ticking ? 'opacity-50' : ''}`}
+            disabled={ticking}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all ${
+              ticking ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {ticking ? 'Refreshing…' : '↺ Refresh'}
           </button>
