@@ -1,0 +1,2 @@
+ALTER TABLE "deployment_jobs" ADD COLUMN "webhook_event_id" varchar(255);--> statement-breakpoint
+ALTER TABLE "deployment_jobs" ADD CONSTRAINT "deployment_jobs_webhook_event_id_unique" UNIQUE("webhook_event_id");

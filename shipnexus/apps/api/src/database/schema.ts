@@ -19,26 +19,21 @@ export const deploymentStatusEnum = pgEnum('deployment_status', [
 export const deploymentJobs = pgTable('deployment_jobs', {
   id: uuid('id').primaryKey().defaultRandom(),
 
-  // What is being deployed
-  serviceName: varchar('service_name', { length: 255 }).notNull(),
-  imageTag:    varchar('image_tag',    { length: 255 }).notNull(),
-  environment: varchar('environment',  { length: 64  }).notNull().default('production'),
+  serviceName:    varchar('service_name',    { length: 255 }).notNull(),
+  imageTag:       varchar('image_tag',       { length: 255 }).notNull(),
+  environment:    varchar('environment',     { length: 64  }).notNull().default('production'),
 
-  // Lifecycle tracking
-  status:      deploymentStatusEnum('status').notNull().default('pending'),
-  triggeredBy: varchar('triggered_by', { length: 255 }).notNull(),
+  status:         deploymentStatusEnum('status').notNull().default('pending'),
+  triggeredBy:    varchar('triggered_by',    { length: 255 }).notNull(),
+  webhookEventId: varchar('webhook_event_id',{ length: 255 }).unique(),
 
-  // Raw webhook body — invaluable for replaying or debugging failed jobs
-  payload: jsonb('payload'),
+  payload:        jsonb('payload'),
+  errorMessage:   varchar('error_message',  { length: 2048 }),
 
-  // Error capture when status = 'failed'
-  errorMessage: varchar('error_message', { length: 2048 }),
-
-  // Timestamps — all UTC
-  createdAt:   timestamp('created_at',   { withTimezone: true }).notNull().defaultNow(),
-  updatedAt:   timestamp('updated_at',   { withTimezone: true }).notNull().defaultNow(),
-  startedAt:   timestamp('started_at',   { withTimezone: true }),
-  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt:      timestamp('created_at',   { withTimezone: true }).notNull().defaultNow(),
+  updatedAt:      timestamp('updated_at',   { withTimezone: true }).notNull().defaultNow(),
+  startedAt:      timestamp('started_at',   { withTimezone: true }),
+  completedAt:    timestamp('completed_at', { withTimezone: true }),
 });
 
 // Drizzle inferred types — used throughout the app for type safety
