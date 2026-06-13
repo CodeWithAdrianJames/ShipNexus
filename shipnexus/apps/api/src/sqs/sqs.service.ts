@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService }                    from '@nestjs/config';
+import { createHash }                       from 'crypto';
 import {
   SQSClient,
   SendMessageCommand,
@@ -23,34 +24,40 @@ export class SqsService implements OnModuleInit {
     });
   }
 
-  // Resolves the queue URL once on startup — fails fast if the queue doesn't exist
   async onModuleInit() {
     const command = new GetQueueUrlCommand({
       QueueName: 'shipnexus-deployments.fifo',
     });
-
-    const response = await this.client.send(command);
-    this.queueUrl  = response.QueueUrl!;
-
+    const response  = await this.client.send(command);
+    this.queueUrl   = response.QueueUrl!;
     this.logger.log(`SQS queue resolved: ${this.queueUrl}`);
   }
 
+  /**
+   * SQS hard-limits MessageGroupId to 128 chars.
+   * serviceName is varchar(255) so we must guard against overflow.
+   * For names ≤128 chars: use as-is (human-readable, easier to debug).
+   * For names >128 chars: SHA-256 hex (always 64 chars) — deterministic
+   * and collision-resistant, uniqueness is fully preserved.
+   */
+  safeMessageGroupId(serviceName: string): string {
+    if (serviceName.length <= 128) return serviceName;
+    return createHash('sha256').update(serviceName).digest('hex');
+  }
+
   async publishDeploymentJob(
-    jobId:       string,
-    serviceName: string,
+    jobId:              string,
+    serviceName:        string,
+    deduplicationId:    string,
   ): Promise<void> {
     const command = new SendMessageCommand({
-      QueueUrl:                this.queueUrl,
-      // Claim Check: only the ID travels over the wire
-      MessageBody:             JSON.stringify({ jobId }),
-      // Orders all messages for the same service sequentially
-      MessageGroupId:          serviceName,
-      // Deduplicates retried webhook triggers within 5-minute window
-      MessageDeduplicationId:  jobId,
+      QueueUrl:               this.queueUrl,
+      MessageBody:            JSON.stringify({ jobId }),
+      MessageGroupId:         this.safeMessageGroupId(serviceName),
+      MessageDeduplicationId: deduplicationId,
     });
 
     await this.client.send(command);
-
     this.logger.log(`Published job ${jobId} for service "${serviceName}" to SQS`);
   }
 }

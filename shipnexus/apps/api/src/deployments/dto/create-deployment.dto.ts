@@ -28,5 +28,10 @@ export class CreateDeploymentDto {
   triggeredBy: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  webhookEventId?: string;
+
+  @IsOptional()
   payload?: Record<string, unknown>;
 }

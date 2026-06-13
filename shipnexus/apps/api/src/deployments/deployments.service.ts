@@ -17,23 +17,33 @@ export class DeploymentsService {
   ) {}
 
   async create(dto: CreateDeploymentDto) {
-    // 1. Write the job record first — the DB is the source of truth
     const [job] = await this.db
       .insert(deploymentJobs)
       .values({
-        serviceName:  dto.serviceName,
-        imageTag:     dto.imageTag,
-        environment:  dto.environment ?? 'production',
-        triggeredBy:  dto.triggeredBy,
-        payload:      dto.payload ?? null,
-        status:       'pending',
+        serviceName:    dto.serviceName,
+        imageTag:       dto.imageTag,
+        environment:    dto.environment ?? 'production',
+        triggeredBy:    dto.triggeredBy,
+        webhookEventId: dto.webhookEventId ?? null,
+        payload:        dto.payload ?? null,
+        status:         'pending',
       })
       .returning();
 
     this.logger.log(`Created deployment job ${job.id} for ${job.serviceName}`);
 
-    // 2. Publish only the ID — the worker fetches the rest from Postgres
-    await this.sqsService.publishDeploymentJob(job.id, job.serviceName);
+    // Use webhookEventId as the stable deduplication key if provided,
+    // otherwise fall back to job.id. This means: if the caller supplies
+    // a webhookEventId, SQS will silently drop retried webhook fires
+    // within the 5-minute dedup window. Without it, each retry creates
+    // a new job.id and bypasses dedup — callers should always provide it.
+    const deduplicationId = job.webhookEventId ?? job.id;
+
+    await this.sqsService.publishDeploymentJob(
+      job.id,
+      job.serviceName,
+      deduplicationId,
+    );
 
     return job;
   }
