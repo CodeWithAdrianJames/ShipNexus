@@ -1,6 +1,15 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { DeploymentsService }    from './deployments.service';
-import { CreateDeploymentDto }   from './dto/create-deployment.dto';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import { DeploymentsService }  from './deployments.service';
+import { CreateDeploymentDto } from './dto/create-deployment.dto';
+import { GithubWebhookGuard }  from './guards/github-webhook.guard';
 
 @Controller('deployments')
 export class DeploymentsController {
@@ -8,6 +17,7 @@ export class DeploymentsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(GithubWebhookGuard)
   create(@Body() createDeploymentDto: CreateDeploymentDto) {
     return this.deploymentsService.create(createDeploymentDto);
   }
