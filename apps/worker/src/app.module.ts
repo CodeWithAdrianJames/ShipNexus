@@ -4,6 +4,7 @@ import { AppController }   from './app.controller';
 import { AppService }      from './app.service';
 import { DatabaseModule }  from './database/database.module';
 import { LockModule }      from './lock/lock.module';
+import { EcsModule }       from './ecs/ecs.module';
 import { ProcessorModule } from './processor/processor.module';
 
 @Module({
@@ -11,6 +12,7 @@ import { ProcessorModule } from './processor/processor.module';
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     LockModule,
+    EcsModule,
     ProcessorModule,
   ],
   controllers: [AppController],

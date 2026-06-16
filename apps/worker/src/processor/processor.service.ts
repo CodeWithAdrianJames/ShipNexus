@@ -14,10 +14,11 @@ import {
   DeleteMessageCommand,
   GetQueueUrlCommand,
 } from '@aws-sdk/client-sqs';
-import * as schema            from '../database/schema';
-import { deploymentJobs }     from '../database/schema';
-import { DATABASE_CLIENT }    from '../database/database.provider';
-import { LockService }        from '../lock/lock.service';
+import * as schema         from '../database/schema';
+import { deploymentJobs }  from '../database/schema';
+import { DATABASE_CLIENT } from '../database/database.provider';
+import { LockService }     from '../lock/lock.service';
+import { EcsService }      from '../ecs/ecs.service';
 
 @Injectable()
 export class ProcessorService implements OnModuleInit, OnModuleDestroy {
@@ -29,7 +30,8 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly lockService: LockService,
+    private readonly lockService:   LockService,
+    private readonly ecsService:    EcsService,
     @Inject(DATABASE_CLIENT)
     private readonly db: PostgresJsDatabase<typeof schema>,
   ) {
@@ -71,18 +73,13 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           new ReceiveMessageCommand({
             QueueUrl:            this.queueUrl,
             MaxNumberOfMessages: 1,
-            WaitTimeSeconds:     Number(
-              this.configService.get('SQS_WAIT_TIME_SECONDS', 20),
-            ),
-            VisibilityTimeout:   Number(
-              this.configService.get('SQS_VISIBILITY_TIMEOUT', 30),
-            ),
-            AttributeNames: ['All'],
+            WaitTimeSeconds:     Number(this.configService.get('SQS_WAIT_TIME_SECONDS', 20)),
+            VisibilityTimeout:   Number(this.configService.get('SQS_VISIBILITY_TIMEOUT', 30)),
+            AttributeNames:      ['All'],
           }),
         );
 
         const messages = response.Messages ?? [];
-
         if (messages.length === 0) {
           this.logger.debug('No messages — long poll returned empty');
           continue;
@@ -102,7 +99,6 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('SQS polling stopped');
   }
 
-  // Deletes a message from SQS and logs any errors without throwing
   private async safeDeleteMessage(receiptHandle: string, context: string): Promise<void> {
     try {
       await this.client.send(
@@ -113,9 +109,6 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       );
       this.logger.log(`SQS message deleted (${context})`);
     } catch (err) {
-      // Log but do NOT update DB state — delete failure is an SQS concern,
-      // not a deployment failure. The message will redeliver after
-      // VisibilityTimeout; the idempotency guard below will catch it.
       this.logger.error(`Failed to delete SQS message (${context})`, err);
     }
   }
@@ -124,30 +117,26 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
     Body?: string;
     ReceiptHandle?: string;
   }): Promise<void> {
-    // --- 1. Parse the Claim Check message ---
+    // --- 1. Parse Claim Check ---
     let jobId: string;
     try {
       const body = JSON.parse(message.Body ?? '{}');
       jobId = body.jobId;
       if (!jobId) throw new Error('Missing jobId in message body');
-    } catch (err) {
-      this.logger.error('Malformed SQS message body — deleting', message.Body);
-      // Fix 13: delete poison messages so they don't block the queue
-      await this.safeDeleteMessage(
-        message.ReceiptHandle!,
-        'malformed-body',
-      );
+    } catch {
+      this.logger.error('Malformed SQS message — deleting', message.Body);
+      await this.safeDeleteMessage(message.ReceiptHandle!, 'malformed-body');
       return;
     }
 
     this.logger.log(`Received message for job ${jobId}`);
 
-    // --- 2. Acquire distributed lock ---
+    // --- 2. Distributed lock ---
     const locked = await this.lockService.acquire(jobId);
     if (!locked) return;
 
     try {
-      // --- 3. Fetch full job record (Claim Check resolution) ---
+      // --- 3. Claim Check resolution ---
       const [job] = await this.db
         .select()
         .from(deploymentJobs)
@@ -155,24 +144,14 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
 
       if (!job) {
         this.logger.error(`Job ${jobId} not found in DB — deleting message`);
-        // Fix 13: delete unfulfillable messages
-        await this.safeDeleteMessage(
-          message.ReceiptHandle!,
-          `job-not-found:${jobId}`,
-        );
+        await this.safeDeleteMessage(message.ReceiptHandle!, `job-not-found:${jobId}`);
         return;
       }
 
-      // Fix 14: idempotency guard — skip already-terminal jobs
-      // Handles duplicate SQS deliveries after VisibilityTimeout
+      // --- 4. Idempotency guard ---
       if (job.status === 'success' || job.status === 'cancelled') {
-        this.logger.warn(
-          `Job ${jobId} already in terminal state (${job.status}) — deleting duplicate message`,
-        );
-        await this.safeDeleteMessage(
-          message.ReceiptHandle!,
-          `already-terminal:${jobId}`,
-        );
+        this.logger.warn(`Job ${jobId} already terminal (${job.status}) — skipping`);
+        await this.safeDeleteMessage(message.ReceiptHandle!, `already-terminal:${jobId}`);
         return;
       }
 
@@ -180,70 +159,86 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         `Processing job ${job.id} | service=${job.serviceName} | image=${job.imageTag} | env=${job.environment}`,
       );
 
-      // --- 4. pending → queued (only if currently pending) ---
-      await this.db
+      // --- 5. pending → queued (Fix 3: check affected rows) ---
+      const queuedRows = await this.db
         .update(deploymentJobs)
         .set({ status: 'queued', updatedAt: new Date() })
-        .where(
-          and(
-            eq(deploymentJobs.id, jobId),
-            eq(deploymentJobs.status, 'pending'),
-          ),
+        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'pending')))
+        .returning({ id: deploymentJobs.id });
+
+      if (queuedRows.length === 0) {
+        this.logger.warn(
+          `Job ${jobId} transition pending→queued matched 0 rows — ` +
+          `status may have changed concurrently; skipping`,
         );
+        return;
+      }
 
       this.logger.log(`Job ${jobId} → queued`);
 
-      // --- 5. queued → running (only if currently queued) ---
-      await this.db
+      // --- 6. queued → running (Fix 3: check affected rows) ---
+      const runningRows = await this.db
         .update(deploymentJobs)
-        .set({
-          status:    'running',
-          startedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(deploymentJobs.id, jobId),
-            eq(deploymentJobs.status, 'queued'),
-          ),
+        .set({ status: 'running', startedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'queued')))
+        .returning({ id: deploymentJobs.id });
+
+      if (runningRows.length === 0) {
+        this.logger.warn(
+          `Job ${jobId} transition queued→running matched 0 rows — skipping ECS trigger`,
         );
+        return;
+      }
 
       this.logger.log(`Job ${jobId} → running`);
 
-      // --- 6. Simulated deployment work ---
-      this.logger.log(
-        `[SIMULATED] Deploying ${job.serviceName}:${job.imageTag} to ECS on ${job.environment}...`,
-      );
-      await new Promise((r) => setTimeout(r, 3_000));
+      // --- 7. Trigger ECS deployment ---
+      await this.ecsService.triggerDeployment(job.serviceName);
+      const result = await this.ecsService.waitForStability(job.serviceName);
 
-      // --- 7. running → success (only if currently running) ---
-      // Fix 12: DB write to success BEFORE attempting SQS delete
-      await this.db
-        .update(deploymentJobs)
-        .set({
-          status:      'success',
-          completedAt: new Date(),
-          updatedAt:   new Date(),
-        })
-        .where(
-          and(
-            eq(deploymentJobs.id, jobId),
-            eq(deploymentJobs.status, 'running'),
-          ),
-        );
+      this.logger.log(`ECS deployment result for job ${jobId}: ${result}`);
 
-      this.logger.log(`Job ${jobId} → success ✓`);
+      if (result === 'success') {
+        // Fix 3: check affected rows for running→success
+        const successRows = await this.db
+          .update(deploymentJobs)
+          .set({ status: 'success', completedAt: new Date(), updatedAt: new Date() })
+          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')))
+          .returning({ id: deploymentJobs.id });
 
-      // --- 8. Delete SQS message in its own scope ---
-      // Fix 12: delete errors do NOT flip status to failed
-      await this.safeDeleteMessage(
-        message.ReceiptHandle!,
-        `success:${jobId}`,
-      );
+        if (successRows.length === 0) {
+          this.logger.warn(
+            `Job ${jobId} transition running→success matched 0 rows — ` +
+            `state may have been modified externally`,
+          );
+        } else {
+          this.logger.log(`Job ${jobId} → success ✓`);
+        }
+
+        await this.safeDeleteMessage(message.ReceiptHandle!, `success:${jobId}`);
+      } else {
+        const errorMessage =
+          result === 'timeout'
+            ? `ECS deployment timed out after ${this.configService.get('ECS_POLL_MAX_ATTEMPTS', 40)} polling attempts`
+            : `ECS reported deployment FAILED — check ECS events for ${job.serviceName}`;
+
+        await this.db
+          .update(deploymentJobs)
+          .set({
+            status:       'failed',
+            errorMessage,
+            completedAt:  new Date(),
+            updatedAt:    new Date(),
+          })
+          // Fix 3: only overwrite if still in running state
+          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')));
+
+        this.logger.error(`Job ${jobId} → failed (${result})`);
+      }
     } catch (err) {
-      // Only processing errors (before the success DB write) reach here
       this.logger.error(`Job ${jobId} failed during processing`, err);
 
+      // Fix 3: only mark failed if currently in running state
       await this.db
         .update(deploymentJobs)
         .set({
@@ -252,10 +247,14 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           completedAt:  new Date(),
           updatedAt:    new Date(),
         })
-        .where(eq(deploymentJobs.id, jobId));
+        .where(
+          and(
+            eq(deploymentJobs.id, jobId),
+            eq(deploymentJobs.status, 'running'),
+          ),
+        );
 
       this.logger.log(`Job ${jobId} → failed`);
-      // Do NOT delete message — let it redeliver after VisibilityTimeout
     } finally {
       await this.lockService.release(jobId);
     }
