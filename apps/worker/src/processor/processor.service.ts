@@ -159,42 +159,64 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         `Processing job ${job.id} | service=${job.serviceName} | image=${job.imageTag} | env=${job.environment}`,
       );
 
-      // --- 5. pending → queued ---
-      await this.db
+      // --- 5. pending → queued (Fix 3: check affected rows) ---
+      const queuedRows = await this.db
         .update(deploymentJobs)
         .set({ status: 'queued', updatedAt: new Date() })
-        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'pending')));
+        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'pending')))
+        .returning({ id: deploymentJobs.id });
+
+      if (queuedRows.length === 0) {
+        this.logger.warn(
+          `Job ${jobId} transition pending→queued matched 0 rows — ` +
+          `status may have changed concurrently; skipping`,
+        );
+        return;
+      }
 
       this.logger.log(`Job ${jobId} → queued`);
 
-      // --- 6. queued → running + trigger ECS deployment ---
-      await this.db
+      // --- 6. queued → running (Fix 3: check affected rows) ---
+      const runningRows = await this.db
         .update(deploymentJobs)
         .set({ status: 'running', startedAt: new Date(), updatedAt: new Date() })
-        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'queued')));
+        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'queued')))
+        .returning({ id: deploymentJobs.id });
+
+      if (runningRows.length === 0) {
+        this.logger.warn(
+          `Job ${jobId} transition queued→running matched 0 rows — skipping ECS trigger`,
+        );
+        return;
+      }
 
       this.logger.log(`Job ${jobId} → running`);
 
-      // Trigger the real ECS deployment
+      // --- 7. Trigger ECS deployment ---
       await this.ecsService.triggerDeployment(job.serviceName);
-
-      // Poll until stable, failed, or timeout
       const result = await this.ecsService.waitForStability(job.serviceName);
 
       this.logger.log(`ECS deployment result for job ${jobId}: ${result}`);
 
       if (result === 'success') {
-        // --- 7. running → success ---
-        await this.db
+        // Fix 3: check affected rows for running→success
+        const successRows = await this.db
           .update(deploymentJobs)
           .set({ status: 'success', completedAt: new Date(), updatedAt: new Date() })
-          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')));
+          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')))
+          .returning({ id: deploymentJobs.id });
 
-        this.logger.log(`Job ${jobId} → success ✓`);
+        if (successRows.length === 0) {
+          this.logger.warn(
+            `Job ${jobId} transition running→success matched 0 rows — ` +
+            `state may have been modified externally`,
+          );
+        } else {
+          this.logger.log(`Job ${jobId} → success ✓`);
+        }
 
         await this.safeDeleteMessage(message.ReceiptHandle!, `success:${jobId}`);
       } else {
-        // result is 'failed' or 'timeout' — treat both as a failed deployment
         const errorMessage =
           result === 'timeout'
             ? `ECS deployment timed out after ${this.configService.get('ECS_POLL_MAX_ATTEMPTS', 40)} polling attempts`
@@ -208,14 +230,15 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
             completedAt:  new Date(),
             updatedAt:    new Date(),
           })
-          .where(eq(deploymentJobs.id, jobId));
+          // Fix 3: only overwrite if still in running state
+          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')));
 
         this.logger.error(`Job ${jobId} → failed (${result})`);
-        // Do NOT delete — let SQS redeliver for retry
       }
     } catch (err) {
       this.logger.error(`Job ${jobId} failed during processing`, err);
 
+      // Fix 3: only mark failed if currently in running state
       await this.db
         .update(deploymentJobs)
         .set({
@@ -224,7 +247,12 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           completedAt:  new Date(),
           updatedAt:    new Date(),
         })
-        .where(eq(deploymentJobs.id, jobId));
+        .where(
+          and(
+            eq(deploymentJobs.id, jobId),
+            eq(deploymentJobs.status, 'running'),
+          ),
+        );
 
       this.logger.log(`Job ${jobId} → failed`);
     } finally {

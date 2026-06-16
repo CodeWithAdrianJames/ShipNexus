@@ -12,15 +12,15 @@ export type DeploymentResult = 'success' | 'failed' | 'timeout';
 export class EcsService {
   private readonly logger = new Logger(EcsService.name);
   private readonly client: ECSClient;
-  private readonly clusterName:      string;
-  private readonly pollIntervalMs:   number;
-  private readonly pollMaxAttempts:  number;
+  private readonly clusterName:       string;
+  private readonly pollIntervalMs:    number;
+  private readonly pollMaxAttempts:   number;
   private readonly skipStabilityPoll: boolean;
+  private readonly dryRun:            boolean;
 
   constructor(private readonly configService: ConfigService) {
     this.client = new ECSClient({
       region:   configService.getOrThrow<string>('AWS_REGION'),
-      // Omitting endpoint in production points the SDK at real AWS
       endpoint: configService.get<string>('AWS_ENDPOINT_URL'),
       credentials: {
         accessKeyId:     configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
@@ -28,53 +28,58 @@ export class EcsService {
       },
     });
 
-    this.clusterName       = configService.get<string>('ECS_CLUSTER_NAME', 'shipnexus-local');
-    this.pollIntervalMs    = Number(configService.get('ECS_POLL_INTERVAL_MS', 15_000));
-    this.pollMaxAttempts   = Number(configService.get('ECS_POLL_MAX_ATTEMPTS', 40));
+    this.clusterName = configService.get<string>('ECS_CLUSTER_NAME', 'shipnexus-local');
+
+    // Fix 2: validate numeric config values before use
+    const rawPollInterval   = Number(configService.get('ECS_POLL_INTERVAL_MS', 15_000));
+    const rawPollMaxAttempts = Number(configService.get('ECS_POLL_MAX_ATTEMPTS', 40));
+
+    if (isNaN(rawPollInterval) || rawPollInterval <= 0) {
+      throw new Error(
+        `[EcsService] Invalid ECS_POLL_INTERVAL_MS: "${configService.get('ECS_POLL_INTERVAL_MS')}" — must be a positive number`,
+      );
+    }
+
+    if (isNaN(rawPollMaxAttempts) || rawPollMaxAttempts <= 0) {
+      throw new Error(
+        `[EcsService] Invalid ECS_POLL_MAX_ATTEMPTS: "${configService.get('ECS_POLL_MAX_ATTEMPTS')}" — must be a positive number`,
+      );
+    }
+
+    this.pollIntervalMs    = rawPollInterval;
+    this.pollMaxAttempts   = rawPollMaxAttempts;
     this.skipStabilityPoll = configService.get<string>('ECS_SKIP_STABILITY_POLL', 'false') === 'true';
+    this.dryRun            = configService.get<string>('ECS_DRY_RUN', 'false') === 'true';
 
     this.logger.log(
-      `ECS client ready | cluster=${this.clusterName} | skipPoll=${this.skipStabilityPoll}`,
+      `ECS client ready | cluster=${this.clusterName} | skipPoll=${this.skipStabilityPoll} | dryRun=${this.dryRun}`,
     );
   }
 
-  /**
-   * Forces a new ECS deployment for the given service.
-   * This is equivalent to clicking "Force new deployment" in the AWS console.
-   */
   async triggerDeployment(serviceName: string): Promise<void> {
-  const dryRun = this.configService.get<string>('ECS_DRY_RUN', 'false') === 'true';
+    if (this.dryRun) {
+      this.logger.warn(
+        `[DRY-RUN] Skipping UpdateService for ${serviceName} — ` +
+        `ECS_DRY_RUN=true (ECS requires LocalStack Pro or real AWS credentials)`,
+      );
+      return;
+    }
 
-  if (dryRun) {
-    this.logger.warn(
-      `[DRY-RUN] Skipping UpdateService for ${serviceName} — ` +
-      `ECS_DRY_RUN=true (ECS requires LocalStack Pro or real AWS credentials)`,
+    this.logger.log(
+      `Triggering ECS deployment: cluster=${this.clusterName} service=${serviceName}`,
     );
-    return;
+
+    await this.client.send(
+      new UpdateServiceCommand({
+        cluster:            this.clusterName,
+        service:            serviceName,
+        forceNewDeployment: true,
+      }),
+    );
+
+    this.logger.log(`UpdateService accepted for ${serviceName}`);
   }
 
-  this.logger.log(
-    `Triggering ECS deployment: cluster=${this.clusterName} service=${serviceName}`,
-  );
-
-  await this.client.send(
-    new UpdateServiceCommand({
-      cluster:            this.clusterName,
-      service:            serviceName,
-      forceNewDeployment: true,
-    }),
-  );
-
-  this.logger.log(`UpdateService accepted for ${serviceName}`);
-}
-
-  /**
-   * Polls DescribeServices until the PRIMARY deployment reaches a terminal
-   * state (COMPLETED or FAILED), or until max attempts are exhausted.
-   *
-   * In local dev (ECS_SKIP_STABILITY_POLL=true), returns 'success' immediately
-   * after UpdateService is accepted — LocalStack doesn't cycle task states.
-   */
   async waitForStability(serviceName: string): Promise<DeploymentResult> {
     if (this.skipStabilityPoll) {
       this.logger.log(
@@ -91,50 +96,60 @@ export class EcsService {
     for (let attempt = 1; attempt <= this.pollMaxAttempts; attempt++) {
       await new Promise((r) => setTimeout(r, this.pollIntervalMs));
 
-      const response = await this.client.send(
-        new DescribeServicesCommand({
-          cluster:  this.clusterName,
-          services: [serviceName],
-        }),
-      );
-
-      const service = response.services?.[0];
-
-      if (!service) {
-        this.logger.error(
-          `Service ${serviceName} not found in cluster ${this.clusterName}`,
+      // Fix 1: wrap DescribeServicesCommand in try-catch so transient
+      // API errors consume a retry attempt instead of failing the job
+      try {
+        const response = await this.client.send(
+          new DescribeServicesCommand({
+            cluster:  this.clusterName,
+            services: [serviceName],
+          }),
         );
-        return 'failed';
-      }
 
-      const deployments      = service.deployments ?? [];
-      const primaryDeployment = deployments.find((d) => d.status === 'PRIMARY');
+        const svc = response.services?.[0];
 
-      this.logger.log(
-        `[${attempt}/${this.pollMaxAttempts}] ${serviceName} | ` +
-        `rolloutState=${primaryDeployment?.rolloutState ?? 'UNKNOWN'} | ` +
-        `running=${primaryDeployment?.runningCount ?? 0} | ` +
-        `desired=${primaryDeployment?.desiredCount ?? 0} | ` +
-        `deployments=${deployments.length}`,
-      );
+        if (!svc) {
+          this.logger.error(
+            `Service ${serviceName} not found in cluster ${this.clusterName}`,
+          );
+          return 'failed';
+        }
 
-      // Terminal failure state — ECS rolled back the deployment
-      if (primaryDeployment?.rolloutState === 'FAILED') {
-        this.logger.error(
-          `Deployment FAILED for ${serviceName} — ECS initiated rollback`,
+        const deployments       = svc.deployments ?? [];
+        const primaryDeployment = deployments.find((d) => d.status === 'PRIMARY');
+
+        this.logger.log(
+          `[${attempt}/${this.pollMaxAttempts}] ${serviceName} | ` +
+          `rolloutState=${primaryDeployment?.rolloutState ?? 'UNKNOWN'} | ` +
+          `running=${primaryDeployment?.runningCount ?? 0} | ` +
+          `desired=${primaryDeployment?.desiredCount ?? 0} | ` +
+          `deployments=${deployments.length}`,
         );
-        return 'failed';
-      }
 
-      // Terminal success: rollout completed OR single deployment with matching counts
-      if (
-        primaryDeployment?.rolloutState === 'COMPLETED' ||
-        (primaryDeployment?.runningCount === primaryDeployment?.desiredCount &&
-          primaryDeployment?.desiredCount! > 0 &&
-          deployments.length === 1)
-      ) {
-        this.logger.log(`Service ${serviceName} reached stable state ✓`);
-        return 'success';
+        if (primaryDeployment?.rolloutState === 'FAILED') {
+          this.logger.error(
+            `Deployment FAILED for ${serviceName} — ECS initiated rollback`,
+          );
+          return 'failed';
+        }
+
+        if (
+          primaryDeployment?.rolloutState === 'COMPLETED' ||
+          (primaryDeployment?.runningCount === primaryDeployment?.desiredCount &&
+            primaryDeployment?.desiredCount! > 0 &&
+            deployments.length === 1)
+        ) {
+          this.logger.log(`Service ${serviceName} reached stable state ✓`);
+          return 'success';
+        }
+      } catch (err) {
+        // Transient error — log and consume this attempt, do not throw
+        this.logger.warn(
+          `[${attempt}/${this.pollMaxAttempts}] Transient error polling ` +
+          `${serviceName} — will retry`,
+          err instanceof Error ? err.message : String(err),
+        );
+        // Continue to next attempt
       }
     }
 
