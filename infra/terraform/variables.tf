@@ -94,3 +94,40 @@ variable "worker_memory" {
   type        = number
   default     = 512
 }
+# ── RDS ───────────────────────────────────────────────────────────────────────
+
+variable "db_password" {
+  description = "RDS Postgres master password — use a strong random value in production"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.db_password) >= 16
+    error_message = "db_password must be at least 16 characters"
+  }
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+# ── ElastiCache ───────────────────────────────────────────────────────────────
+
+variable "redis_auth_token" {
+  description = "ElastiCache Redis AUTH token — minimum 16 characters"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.redis_auth_token) >= 16
+    error_message = "redis_auth_token must be at least 16 characters"
+  }
+}
+
+variable "redis_node_type" {
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.t4g.micro"
+}
