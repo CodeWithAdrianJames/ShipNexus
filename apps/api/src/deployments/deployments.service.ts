@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { PostgresJsDatabase }          from 'drizzle-orm/postgres-js';
-import { deploymentJobs }              from '../database/schema';
-import * as schema                     from '../database/schema';
-import { DATABASE_CLIENT }             from '../database/database.provider';
-import { CreateDeploymentDto }         from './dto/create-deployment.dto';
-import { SqsService }                  from '../sqs/sqs.service';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { deploymentJobs } from '../database/schema';
+import * as schema from '../database/schema';
+import { DATABASE_CLIENT } from '../database/database.provider';
+import { CreateDeploymentDto } from './dto/create-deployment.dto';
+import { SqsService } from '../sqs/sqs.service';
 
 @Injectable()
 export class DeploymentsService {
@@ -20,13 +20,13 @@ export class DeploymentsService {
     const [job] = await this.db
       .insert(deploymentJobs)
       .values({
-        serviceName:    dto.serviceName,
-        imageTag:       dto.imageTag,
-        environment:    dto.environment ?? 'production',
-        triggeredBy:    dto.triggeredBy,
+        serviceName: dto.serviceName,
+        imageTag: dto.imageTag,
+        environment: dto.environment ?? 'production',
+        triggeredBy: dto.triggeredBy,
         webhookEventId: dto.webhookEventId ?? null,
-        payload:        dto.payload ?? null,
-        status:         'pending',
+        payload: dto.payload ?? null,
+        status: 'pending',
       })
       .returning();
 

@@ -1,6 +1,6 @@
-import { NestFactory }    from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule }      from './app.module';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   // rawBody: true buffers the exact request bytes onto req.rawBody
@@ -9,12 +9,12 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist:            true,
+      whitelist: true,
       forbidNonWhitelisted: true,
-      transform:            true,
+      transform: true,
     }),
   );
 
   await app.listen(3000, '0.0.0.0');
 }
-bootstrap();
+void bootstrap();

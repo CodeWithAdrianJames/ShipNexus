@@ -21,7 +21,7 @@ terraform {
 provider "aws" {
   region = var.aws_region
 
-    # Skip credential validation for local terraform plan
+  # Skip credential validation for local terraform plan
   # Remove these three lines when running against real AWS
   skip_credentials_validation = true
   skip_requesting_account_id  = true

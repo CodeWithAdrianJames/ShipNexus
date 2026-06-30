@@ -47,9 +47,9 @@ resource "aws_db_instance" "main" {
   parameter_group_name = aws_db_parameter_group.main.name
   multi_az             = false
 
-  backup_retention_period   = 7
-  backup_window             = "03:00-04:00"
-  maintenance_window        = "Mon:04:00-Mon:05:00"
+  backup_retention_period = 7
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "Mon:04:00-Mon:05:00"
 
   deletion_protection       = true
   skip_final_snapshot       = false

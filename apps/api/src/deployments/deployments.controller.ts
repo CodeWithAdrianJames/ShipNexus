@@ -7,9 +7,9 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { DeploymentsService }  from './deployments.service';
+import { DeploymentsService } from './deployments.service';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
-import { GithubWebhookGuard }  from './guards/github-webhook.guard';
+import { GithubWebhookGuard } from './guards/github-webhook.guard';
 
 @Controller('deployments')
 export class DeploymentsController {
