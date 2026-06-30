@@ -3,7 +3,7 @@
 variable "aws_region" {
   description = "AWS region to deploy into"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-southeast-2"
 }
 
 variable "environment" {
@@ -60,7 +60,7 @@ variable "sqs_message_retention_seconds" {
 variable "sqs_visibility_timeout_seconds" {
   description = "Visibility timeout — must exceed max job processing time"
   type        = number
-  default     = 30
+  default     = 900
 }
 
 # ── ECS ───────────────────────────────────────────────────────────────────────

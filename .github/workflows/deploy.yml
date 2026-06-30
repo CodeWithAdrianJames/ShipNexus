@@ -1,0 +1,199 @@
+name: Build & Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECS_CLUSTER: shipnexus-production-cluster
+  API_SERVICE: shipnexus-production-api
+  WORKER_SERVICE: shipnexus-production-worker
+
+jobs:
+  # ── Deploy API ──────────────────────────────────────────────────────────────
+  deploy-api:
+    name: API — Build, Push & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push API image
+        id: build-api
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: shipnexus-production-api
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          docker build \
+            --cache-from "$REGISTRY/$REPOSITORY:latest" \
+            --tag "$REGISTRY/$REPOSITORY:$IMAGE_TAG" \
+            --tag "$REGISTRY/$REPOSITORY:latest" \
+            apps/api/
+
+          docker push "$REGISTRY/$REPOSITORY:$IMAGE_TAG"
+          docker push "$REGISTRY/$REPOSITORY:latest"
+
+          echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Run DB migrations
+        env:
+          # Pull the real DATABASE_URL from SSM for the migration step
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        working-directory: apps/api
+        run: |
+          npm ci
+          npm run db:migrate
+
+      - name: Register API task definition
+        id: task-def-api
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "${{ env.API_SERVICE }}" \
+            --query taskDefinition \
+            --region "${{ env.AWS_REGION }}" \
+            > task-definition.json
+
+          jq --arg IMAGE "${{ steps.build-api.outputs.image }}" '
+            del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            )
+            | .containerDefinitions = (
+                .containerDefinitions
+                | map(if .name == "api" then .image = $IMAGE else . end)
+              )
+          ' task-definition.json > new-task-definition.json
+
+          TASK_DEFINITION_ARN="$(
+            aws ecs register-task-definition \
+              --cli-input-json file://new-task-definition.json \
+              --query 'taskDefinition.taskDefinitionArn' \
+              --output text \
+              --region "${{ env.AWS_REGION }}"
+          )"
+
+          echo "task-definition-arn=$TASK_DEFINITION_ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Force new ECS deployment — API
+        run: |
+          aws ecs update-service \
+            --cluster  "${{ env.ECS_CLUSTER }}" \
+            --service  "${{ env.API_SERVICE }}" \
+            --task-definition "${{ steps.task-def-api.outputs.task-definition-arn }}" \
+            --force-new-deployment \
+            --region   "${{ env.AWS_REGION }}"
+
+      - name: Wait for API service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.API_SERVICE }}" \
+            --region  "${{ env.AWS_REGION }}"
+
+  # ── Deploy Worker ───────────────────────────────────────────────────────────
+  deploy-worker:
+    name: Worker — Build, Push & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push Worker image
+        id: build-worker
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: shipnexus-production-worker
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          docker build \
+            --cache-from "$REGISTRY/$REPOSITORY:latest" \
+            --tag "$REGISTRY/$REPOSITORY:$IMAGE_TAG" \
+            --tag "$REGISTRY/$REPOSITORY:latest" \
+            apps/worker/
+
+          docker push "$REGISTRY/$REPOSITORY:$IMAGE_TAG"
+          docker push "$REGISTRY/$REPOSITORY:latest"
+
+          echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Register Worker task definition
+        id: task-def-worker
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "${{ env.WORKER_SERVICE }}" \
+            --query taskDefinition \
+            --region "${{ env.AWS_REGION }}" \
+            > task-definition.json
+
+          jq --arg IMAGE "${{ steps.build-worker.outputs.image }}" '
+            del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            )
+            | .containerDefinitions = (
+                .containerDefinitions
+                | map(if .name == "worker" then .image = $IMAGE else . end)
+              )
+          ' task-definition.json > new-task-definition.json
+
+          TASK_DEFINITION_ARN="$(
+            aws ecs register-task-definition \
+              --cli-input-json file://new-task-definition.json \
+              --query 'taskDefinition.taskDefinitionArn' \
+              --output text \
+              --region "${{ env.AWS_REGION }}"
+          )"
+
+          echo "task-definition-arn=$TASK_DEFINITION_ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Force new ECS deployment — Worker
+        run: |
+          aws ecs update-service \
+            --cluster  "${{ env.ECS_CLUSTER }}" \
+            --service  "${{ env.WORKER_SERVICE }}" \
+            --task-definition "${{ steps.task-def-worker.outputs.task-definition-arn }}" \
+            --force-new-deployment \
+            --region   "${{ env.AWS_REGION }}"
+
+      - name: Wait for Worker service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.WORKER_SERVICE }}" \
+            --region  "${{ env.AWS_REGION }}"

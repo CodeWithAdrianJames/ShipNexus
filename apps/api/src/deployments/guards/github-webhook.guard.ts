@@ -5,9 +5,9 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService }              from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { Request }               from 'express';
+import type { Request } from 'express';
 
 @Injectable()
 export class GithubWebhookGuard implements CanActivate {
@@ -43,13 +43,10 @@ export class GithubWebhookGuard implements CanActivate {
 
     // --- 4. Compute expected HMAC-SHA256 over the raw bytes ---
     const expectedSignature =
-      'sha256=' +
-      createHmac('sha256', secret)
-        .update(rawBody)
-        .digest('hex');
+      'sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex');
 
     // --- 5. Constant-time comparison — prevents timing attacks ---
-    const sigBuffer      = Buffer.from(signature);
+    const sigBuffer = Buffer.from(signature);
     const expectedBuffer = Buffer.from(expectedSignature);
 
     // Length mismatch is not secret information — safe to check directly.
@@ -64,15 +61,11 @@ export class GithubWebhookGuard implements CanActivate {
     const isValid = timingSafeEqual(sigBuffer, expectedBuffer);
 
     if (!isValid) {
-      this.logger.warn(
-        `Rejected request from ${req.ip} — signature mismatch`,
-      );
+      this.logger.warn(`Rejected request from ${req.ip} — signature mismatch`);
       throw new UnauthorizedException('Invalid webhook signature');
     }
 
-    this.logger.log(
-      `Webhook signature verified for request from ${req.ip}`,
-    );
+    this.logger.log(`Webhook signature verified for request from ${req.ip}`);
     return true;
   }
 }

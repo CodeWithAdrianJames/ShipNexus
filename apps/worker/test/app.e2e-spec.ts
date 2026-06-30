@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication }    from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import type { Server } from 'http';
 import request from 'supertest';
-import { AppModule }           from './../src/app.module';
-import { ProcessorService }    from './../src/processor/processor.service';
+import { AppModule } from './../src/app.module';
+import { ProcessorService } from './../src/processor/processor.service';
 
 // Minimal ProcessorService stub — no SQS/DB connections needed for a
 // health check test. Prevents onModuleInit from firing real AWS SDK calls.
 const ProcessorServiceMock = {
-  onModuleInit:   jest.fn().mockResolvedValue(undefined),
+  onModuleInit: jest.fn().mockResolvedValue(undefined),
   onModuleDestroy: jest.fn().mockResolvedValue(undefined),
 };
 
@@ -31,7 +32,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', () => {
-    return request(app.getHttpServer())
+    return request(app.getHttpServer() as Server)
       .get('/')
       .expect(200)
       .expect('Hello World!');

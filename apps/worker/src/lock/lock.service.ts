@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService }                        from '@nestjs/config';
-import { randomUUID }                           from 'crypto';
-import Redis                                    from 'ioredis';
+import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
+import Redis from 'ioredis';
+import { DEFAULT_SQS_VISIBILITY_TIMEOUT_SECONDS } from '../config/deployment-defaults';
 
 @Injectable()
 export class LockService implements OnModuleDestroy {
@@ -28,15 +29,17 @@ export class LockService implements OnModuleDestroy {
 
   constructor(private readonly configService: ConfigService) {
     const visibilityTimeout = Number(
-      this.configService.get<number>('SQS_VISIBILITY_TIMEOUT', 30),
+      this.configService.get<number>(
+        'SQS_VISIBILITY_TIMEOUT',
+        DEFAULT_SQS_VISIBILITY_TIMEOUT_SECONDS,
+      ),
     );
     // Add 15-second safety margin above the SQS visibility window
     this.TTL_SECONDS = visibilityTimeout + 15;
 
-    this.client = new Redis(
-      configService.getOrThrow<string>('REDIS_URL'),
-      { lazyConnect: true },
-    );
+    this.client = new Redis(configService.getOrThrow<string>('REDIS_URL'), {
+      lazyConnect: true,
+    });
   }
 
   /**
@@ -45,7 +48,7 @@ export class LockService implements OnModuleDestroy {
    * Returns true if lock acquired, false if another worker holds it.
    */
   async acquire(jobId: string): Promise<boolean> {
-    const token  = randomUUID();
+    const token = randomUUID();
     const result = await this.client.set(
       `lock:deployment:${jobId}`,
       token,

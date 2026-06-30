@@ -5,44 +5,53 @@ import {
   OnModuleDestroy,
   Inject,
 } from '@nestjs/common';
-import { ConfigService }      from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { eq, and }            from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import {
   SQSClient,
   ReceiveMessageCommand,
   DeleteMessageCommand,
   GetQueueUrlCommand,
 } from '@aws-sdk/client-sqs';
-import * as schema         from '../database/schema';
-import { deploymentJobs }  from '../database/schema';
+import * as schema from '../database/schema';
+import { deploymentJobs } from '../database/schema';
 import { DATABASE_CLIENT } from '../database/database.provider';
-import { LockService }     from '../lock/lock.service';
-import { EcsService }      from '../ecs/ecs.service';
+import { LockService } from '../lock/lock.service';
+import { EcsService } from '../ecs/ecs.service';
+import { DEFAULT_SQS_VISIBILITY_TIMEOUT_SECONDS } from '../config/deployment-defaults';
 
 @Injectable()
 export class ProcessorService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ProcessorService.name);
   private readonly client: SQSClient;
   private queueUrl: string;
-  private isPolling  = false;
+  private isPolling = false;
   private shouldPoll = true;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly lockService:   LockService,
-    private readonly ecsService:    EcsService,
+    private readonly lockService: LockService,
+    private readonly ecsService: EcsService,
     @Inject(DATABASE_CLIENT)
     private readonly db: PostgresJsDatabase<typeof schema>,
   ) {
-    this.client = new SQSClient({
-      region:   configService.getOrThrow<string>('AWS_REGION'),
-      endpoint: configService.getOrThrow<string>('AWS_ENDPOINT_URL'),
-      credentials: {
-        accessKeyId:     configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: configService.getOrThrow<string>('AWS_SECRET_ACCESS_KEY'),
-      },
-    });
+    const clientConfig: ConstructorParameters<typeof SQSClient>[0] = {
+      region: configService.getOrThrow<string>('AWS_REGION'),
+    };
+    const endpoint = configService.get<string>('AWS_ENDPOINT_URL');
+    const accessKeyId = configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = configService.get<string>('AWS_SECRET_ACCESS_KEY');
+
+    if (endpoint) {
+      clientConfig.endpoint = endpoint;
+    }
+
+    if (accessKeyId && secretAccessKey) {
+      clientConfig.credentials = { accessKeyId, secretAccessKey };
+    }
+
+    this.client = new SQSClient(clientConfig);
   }
 
   async onModuleInit() {
@@ -71,11 +80,18 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       try {
         const response = await this.client.send(
           new ReceiveMessageCommand({
-            QueueUrl:            this.queueUrl,
+            QueueUrl: this.queueUrl,
             MaxNumberOfMessages: 1,
-            WaitTimeSeconds:     Number(this.configService.get('SQS_WAIT_TIME_SECONDS', 20)),
-            VisibilityTimeout:   Number(this.configService.get('SQS_VISIBILITY_TIMEOUT', 30)),
-            AttributeNames:      ['All'],
+            WaitTimeSeconds: Number(
+              this.configService.get('SQS_WAIT_TIME_SECONDS', 20),
+            ),
+            VisibilityTimeout: Number(
+              this.configService.get(
+                'SQS_VISIBILITY_TIMEOUT',
+                DEFAULT_SQS_VISIBILITY_TIMEOUT_SECONDS,
+              ),
+            ),
+            AttributeNames: ['All'],
           }),
         );
 
@@ -99,11 +115,14 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('SQS polling stopped');
   }
 
-  private async safeDeleteMessage(receiptHandle: string, context: string): Promise<void> {
+  private async safeDeleteMessage(
+    receiptHandle: string,
+    context: string,
+  ): Promise<void> {
     try {
       await this.client.send(
         new DeleteMessageCommand({
-          QueueUrl:      this.queueUrl,
+          QueueUrl: this.queueUrl,
           ReceiptHandle: receiptHandle,
         }),
       );
@@ -120,8 +139,8 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
     // --- 1. Parse Claim Check ---
     let jobId: string;
     try {
-      const body = JSON.parse(message.Body ?? '{}');
-      jobId = body.jobId;
+      const body = JSON.parse(message.Body ?? '{}') as { jobId?: unknown };
+      jobId = typeof body.jobId === 'string' ? body.jobId : '';
       if (!jobId) throw new Error('Missing jobId in message body');
     } catch {
       this.logger.error('Malformed SQS message — deleting', message.Body);
@@ -144,14 +163,26 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
 
       if (!job) {
         this.logger.error(`Job ${jobId} not found in DB — deleting message`);
-        await this.safeDeleteMessage(message.ReceiptHandle!, `job-not-found:${jobId}`);
+        await this.safeDeleteMessage(
+          message.ReceiptHandle!,
+          `job-not-found:${jobId}`,
+        );
         return;
       }
 
       // --- 4. Idempotency guard ---
-      if (job.status === 'success' || job.status === 'cancelled') {
-        this.logger.warn(`Job ${jobId} already terminal (${job.status}) — skipping`);
-        await this.safeDeleteMessage(message.ReceiptHandle!, `already-terminal:${jobId}`);
+      if (
+        job.status === 'success' ||
+        job.status === 'failed' ||
+        job.status === 'cancelled'
+      ) {
+        this.logger.warn(
+          `Job ${jobId} already terminal (${job.status}) — skipping`,
+        );
+        await this.safeDeleteMessage(
+          message.ReceiptHandle!,
+          `already-terminal:${jobId}`,
+        );
         return;
       }
 
@@ -163,13 +194,18 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       const queuedRows = await this.db
         .update(deploymentJobs)
         .set({ status: 'queued', updatedAt: new Date() })
-        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'pending')))
+        .where(
+          and(
+            eq(deploymentJobs.id, jobId),
+            eq(deploymentJobs.status, 'pending'),
+          ),
+        )
         .returning({ id: deploymentJobs.id });
 
       if (queuedRows.length === 0) {
         this.logger.warn(
           `Job ${jobId} transition pending→queued matched 0 rows — ` +
-          `status may have changed concurrently; skipping`,
+            `status may have changed concurrently; skipping`,
         );
         return;
       }
@@ -179,8 +215,17 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       // --- 6. queued → running (Fix 3: check affected rows) ---
       const runningRows = await this.db
         .update(deploymentJobs)
-        .set({ status: 'running', startedAt: new Date(), updatedAt: new Date() })
-        .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'queued')))
+        .set({
+          status: 'running',
+          startedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(deploymentJobs.id, jobId),
+            eq(deploymentJobs.status, 'queued'),
+          ),
+        )
         .returning({ id: deploymentJobs.id });
 
       if (runningRows.length === 0) {
@@ -202,20 +247,32 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         // Fix 3: check affected rows for running→success
         const successRows = await this.db
           .update(deploymentJobs)
-          .set({ status: 'success', completedAt: new Date(), updatedAt: new Date() })
-          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')))
+          .set({
+            status: 'success',
+            completedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(deploymentJobs.id, jobId),
+              eq(deploymentJobs.status, 'running'),
+            ),
+          )
           .returning({ id: deploymentJobs.id });
 
         if (successRows.length === 0) {
           this.logger.warn(
             `Job ${jobId} transition running→success matched 0 rows — ` +
-            `state may have been modified externally`,
+              `state may have been modified externally`,
           );
         } else {
           this.logger.log(`Job ${jobId} → success ✓`);
         }
 
-        await this.safeDeleteMessage(message.ReceiptHandle!, `success:${jobId}`);
+        await this.safeDeleteMessage(
+          message.ReceiptHandle!,
+          `success:${jobId}`,
+        );
       } else {
         const errorMessage =
           result === 'timeout'
@@ -225,15 +282,21 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         await this.db
           .update(deploymentJobs)
           .set({
-            status:       'failed',
+            status: 'failed',
             errorMessage,
-            completedAt:  new Date(),
-            updatedAt:    new Date(),
+            completedAt: new Date(),
+            updatedAt: new Date(),
           })
           // Fix 3: only overwrite if still in running state
-          .where(and(eq(deploymentJobs.id, jobId), eq(deploymentJobs.status, 'running')));
+          .where(
+            and(
+              eq(deploymentJobs.id, jobId),
+              eq(deploymentJobs.status, 'running'),
+            ),
+          );
 
         this.logger.error(`Job ${jobId} → failed (${result})`);
+        await this.safeDeleteMessage(message.ReceiptHandle!, `failed:${jobId}`);
       }
     } catch (err) {
       this.logger.error(`Job ${jobId} failed during processing`, err);
@@ -242,10 +305,10 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       await this.db
         .update(deploymentJobs)
         .set({
-          status:       'failed',
+          status: 'failed',
           errorMessage: err instanceof Error ? err.message : String(err),
-          completedAt:  new Date(),
-          updatedAt:    new Date(),
+          completedAt: new Date(),
+          updatedAt: new Date(),
         })
         .where(
           and(
@@ -255,6 +318,10 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         );
 
       this.logger.log(`Job ${jobId} → failed`);
+      await this.safeDeleteMessage(
+        message.ReceiptHandle!,
+        `exception:${jobId}`,
+      );
     } finally {
       await this.lockService.release(jobId);
     }

@@ -1,10 +1,10 @@
-import { Module }            from '@nestjs/common';
-import { ConfigModule }      from '@nestjs/config';
-import { AppController }     from './app.controller';
-import { AppService }        from './app.service';
-import { DatabaseModule }    from './database/database.module';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DatabaseModule } from './database/database.module';
 import { DeploymentsModule } from './deployments/deployments.module';
-import { SqsModule }         from './sqs/sqs.module';
+import { SqsModule } from './sqs/sqs.module';
 
 @Module({
   imports: [
@@ -14,6 +14,6 @@ import { SqsModule }         from './sqs/sqs.module';
     DeploymentsModule,
   ],
   controllers: [AppController],
-  providers:   [AppService],
+  providers: [AppService],
 })
 export class AppModule {}

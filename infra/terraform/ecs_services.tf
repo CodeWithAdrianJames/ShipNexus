@@ -15,7 +15,7 @@ resource "aws_ecs_service" "api" {
   network_configuration {
     subnets          = aws_subnet.private[*].id
     security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false   # private subnets — NAT Gateway handles outbound
+    assign_public_ip = false # private subnets — NAT Gateway handles outbound
   }
 
   load_balancer {

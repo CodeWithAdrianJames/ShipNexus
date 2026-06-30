@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService }      from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import {
   ECSClient,
   UpdateServiceCommand,
@@ -12,27 +12,42 @@ export type DeploymentResult = 'success' | 'failed' | 'timeout';
 export class EcsService {
   private readonly logger = new Logger(EcsService.name);
   private readonly client: ECSClient;
-  private readonly clusterName:       string;
-  private readonly pollIntervalMs:    number;
-  private readonly pollMaxAttempts:   number;
+  private readonly clusterName: string;
+  private readonly pollIntervalMs: number;
+  private readonly pollMaxAttempts: number;
   private readonly skipStabilityPoll: boolean;
-  private readonly dryRun:            boolean;
+  private readonly dryRun: boolean;
 
   constructor(private readonly configService: ConfigService) {
-    this.client = new ECSClient({
-      region:   configService.getOrThrow<string>('AWS_REGION'),
-      endpoint: configService.get<string>('AWS_ENDPOINT_URL'),
-      credentials: {
-        accessKeyId:     configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: configService.getOrThrow<string>('AWS_SECRET_ACCESS_KEY'),
-      },
-    });
+    const clientConfig: ConstructorParameters<typeof ECSClient>[0] = {
+      region: configService.getOrThrow<string>('AWS_REGION'),
+    };
+    const endpoint = configService.get<string>('AWS_ENDPOINT_URL');
+    const accessKeyId = configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = configService.get<string>('AWS_SECRET_ACCESS_KEY');
 
-    this.clusterName = configService.get<string>('ECS_CLUSTER_NAME', 'shipnexus-local');
+    if (endpoint) {
+      clientConfig.endpoint = endpoint;
+    }
+
+    if (accessKeyId && secretAccessKey) {
+      clientConfig.credentials = { accessKeyId, secretAccessKey };
+    }
+
+    this.client = new ECSClient(clientConfig);
+
+    this.clusterName = configService.get<string>(
+      'ECS_CLUSTER_NAME',
+      'shipnexus-local',
+    );
 
     // Fix 2: validate numeric config values before use
-    const rawPollInterval   = Number(configService.get('ECS_POLL_INTERVAL_MS', 15_000));
-    const rawPollMaxAttempts = Number(configService.get('ECS_POLL_MAX_ATTEMPTS', 40));
+    const rawPollInterval = Number(
+      configService.get('ECS_POLL_INTERVAL_MS', 15_000),
+    );
+    const rawPollMaxAttempts = Number(
+      configService.get('ECS_POLL_MAX_ATTEMPTS', 40),
+    );
 
     if (isNaN(rawPollInterval) || rawPollInterval <= 0) {
       throw new Error(
@@ -46,10 +61,11 @@ export class EcsService {
       );
     }
 
-    this.pollIntervalMs    = rawPollInterval;
-    this.pollMaxAttempts   = rawPollMaxAttempts;
-    this.skipStabilityPoll = configService.get<string>('ECS_SKIP_STABILITY_POLL', 'false') === 'true';
-    this.dryRun            = configService.get<string>('ECS_DRY_RUN', 'false') === 'true';
+    this.pollIntervalMs = rawPollInterval;
+    this.pollMaxAttempts = rawPollMaxAttempts;
+    this.skipStabilityPoll =
+      configService.get<string>('ECS_SKIP_STABILITY_POLL', 'false') === 'true';
+    this.dryRun = configService.get<string>('ECS_DRY_RUN', 'false') === 'true';
 
     this.logger.log(
       `ECS client ready | cluster=${this.clusterName} | skipPoll=${this.skipStabilityPoll} | dryRun=${this.dryRun}`,
@@ -60,7 +76,7 @@ export class EcsService {
     if (this.dryRun) {
       this.logger.warn(
         `[DRY-RUN] Skipping UpdateService for ${serviceName} — ` +
-        `ECS_DRY_RUN=true (ECS requires LocalStack Pro or real AWS credentials)`,
+          `ECS_DRY_RUN=true (ECS requires LocalStack Pro or real AWS credentials)`,
       );
       return;
     }
@@ -71,8 +87,8 @@ export class EcsService {
 
     await this.client.send(
       new UpdateServiceCommand({
-        cluster:            this.clusterName,
-        service:            serviceName,
+        cluster: this.clusterName,
+        service: serviceName,
         forceNewDeployment: true,
       }),
     );
@@ -90,7 +106,7 @@ export class EcsService {
 
     this.logger.log(
       `Polling for stability: ${serviceName} ` +
-      `(max ${this.pollMaxAttempts} attempts @ ${this.pollIntervalMs}ms)`,
+        `(max ${this.pollMaxAttempts} attempts @ ${this.pollIntervalMs}ms)`,
     );
 
     for (let attempt = 1; attempt <= this.pollMaxAttempts; attempt++) {
@@ -101,7 +117,7 @@ export class EcsService {
       try {
         const response = await this.client.send(
           new DescribeServicesCommand({
-            cluster:  this.clusterName,
+            cluster: this.clusterName,
             services: [serviceName],
           }),
         );
@@ -115,15 +131,17 @@ export class EcsService {
           return 'failed';
         }
 
-        const deployments       = svc.deployments ?? [];
-        const primaryDeployment = deployments.find((d) => d.status === 'PRIMARY');
+        const deployments = svc.deployments ?? [];
+        const primaryDeployment = deployments.find(
+          (d) => d.status === 'PRIMARY',
+        );
 
         this.logger.log(
           `[${attempt}/${this.pollMaxAttempts}] ${serviceName} | ` +
-          `rolloutState=${primaryDeployment?.rolloutState ?? 'UNKNOWN'} | ` +
-          `running=${primaryDeployment?.runningCount ?? 0} | ` +
-          `desired=${primaryDeployment?.desiredCount ?? 0} | ` +
-          `deployments=${deployments.length}`,
+            `rolloutState=${primaryDeployment?.rolloutState ?? 'UNKNOWN'} | ` +
+            `running=${primaryDeployment?.runningCount ?? 0} | ` +
+            `desired=${primaryDeployment?.desiredCount ?? 0} | ` +
+            `deployments=${deployments.length}`,
         );
 
         if (primaryDeployment?.rolloutState === 'FAILED') {
@@ -135,8 +153,9 @@ export class EcsService {
 
         if (
           primaryDeployment?.rolloutState === 'COMPLETED' ||
-          (primaryDeployment?.runningCount === primaryDeployment?.desiredCount &&
-            primaryDeployment?.desiredCount! > 0 &&
+          (primaryDeployment?.runningCount ===
+            primaryDeployment?.desiredCount &&
+            (primaryDeployment?.desiredCount ?? 0) > 0 &&
             deployments.length === 1)
         ) {
           this.logger.log(`Service ${serviceName} reached stable state ✓`);
@@ -146,7 +165,7 @@ export class EcsService {
         // Transient error — log and consume this attempt, do not throw
         this.logger.warn(
           `[${attempt}/${this.pollMaxAttempts}] Transient error polling ` +
-          `${serviceName} — will retry`,
+            `${serviceName} — will retry`,
           err instanceof Error ? err.message : String(err),
         );
         // Continue to next attempt

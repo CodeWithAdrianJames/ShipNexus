@@ -28,7 +28,7 @@ resource "aws_ecs_task_definition" "api" {
 
   container_definitions = jsonencode([
     {
-      name  = "api"
+      name = "api"
       # Placeholder image — CI/CD pipeline overwrites this on every deploy
       image = "nginx:alpine"
 
@@ -41,9 +41,10 @@ resource "aws_ecs_task_definition" "api" {
 
       # Plain environment variables (non-sensitive)
       environment = [
-        { name = "NODE_ENV",    value = var.environment },
-        { name = "PORT",        value = tostring(var.api_container_port) },
-        { name = "AWS_REGION",  value = var.aws_region },
+        { name = "NODE_ENV", value = var.environment },
+        { name = "PORT", value = tostring(var.api_container_port) },
+        { name = "AWS_REGION", value = var.aws_region },
+        { name = "SQS_QUEUE_NAME", value = "${local.name_prefix}-deployments.fifo" },
       ]
 
       # Sensitive values pulled from SSM at task startup — never baked into image
@@ -71,7 +72,7 @@ resource "aws_ecs_task_definition" "api" {
         }
       }
 
-      essential    = true
+      essential              = true
       readonlyRootFilesystem = false
     }
   ])
@@ -98,16 +99,16 @@ resource "aws_ecs_task_definition" "worker" {
       # No port mappings — Worker is outbound only (SQS polling, ECS SDK calls)
 
       environment = [
-        { name = "NODE_ENV",                  value = var.environment },
-        { name = "AWS_REGION",                value = var.aws_region },
-        { name = "SQS_QUEUE_NAME",            value = "${local.name_prefix}-deployments.fifo" },
-        { name = "SQS_VISIBILITY_TIMEOUT",    value = tostring(var.sqs_visibility_timeout_seconds) },
-        { name = "SQS_WAIT_TIME_SECONDS",     value = "20" },
-        { name = "ECS_CLUSTER_NAME",          value = aws_ecs_cluster.main.name },
-        { name = "ECS_SKIP_STABILITY_POLL",   value = "false" },
-        { name = "ECS_DRY_RUN",               value = "false" },
-        { name = "ECS_POLL_INTERVAL_MS",      value = "15000" },
-        { name = "ECS_POLL_MAX_ATTEMPTS",     value = "40" },
+        { name = "NODE_ENV", value = var.environment },
+        { name = "AWS_REGION", value = var.aws_region },
+        { name = "SQS_QUEUE_NAME", value = "${local.name_prefix}-deployments.fifo" },
+        { name = "SQS_VISIBILITY_TIMEOUT", value = tostring(var.sqs_visibility_timeout_seconds) },
+        { name = "SQS_WAIT_TIME_SECONDS", value = "20" },
+        { name = "ECS_CLUSTER_NAME", value = aws_ecs_cluster.main.name },
+        { name = "ECS_SKIP_STABILITY_POLL", value = "false" },
+        { name = "ECS_DRY_RUN", value = "false" },
+        { name = "ECS_POLL_INTERVAL_MS", value = "15000" },
+        { name = "ECS_POLL_MAX_ATTEMPTS", value = "40" },
       ]
 
       secrets = [
@@ -130,7 +131,7 @@ resource "aws_ecs_task_definition" "worker" {
         }
       }
 
-      essential    = true
+      essential              = true
       readonlyRootFilesystem = false
     }
   ])

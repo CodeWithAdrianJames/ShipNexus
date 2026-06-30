@@ -1,10 +1,10 @@
-import { Module }          from '@nestjs/common';
-import { ConfigModule }    from '@nestjs/config';
-import { AppController }   from './app.controller';
-import { AppService }      from './app.service';
-import { DatabaseModule }  from './database/database.module';
-import { LockModule }      from './lock/lock.module';
-import { EcsModule }       from './ecs/ecs.module';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DatabaseModule } from './database/database.module';
+import { LockModule } from './lock/lock.module';
+import { EcsModule } from './ecs/ecs.module';
 import { ProcessorModule } from './processor/processor.module';
 
 @Module({
@@ -16,6 +16,6 @@ import { ProcessorModule } from './processor/processor.module';
     ProcessorModule,
   ],
   controllers: [AppController],
-  providers:   [AppService],
+  providers: [AppService],
 })
 export class AppModule {}

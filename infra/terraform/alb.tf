@@ -21,7 +21,7 @@ resource "aws_lb_target_group" "api" {
   port        = var.api_container_port
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
-  target_type = "ip"   # required for Fargate — tasks get ENI IPs, not instance IDs
+  target_type = "ip" # required for Fargate — tasks get ENI IPs, not instance IDs
 
   health_check {
     enabled             = true
