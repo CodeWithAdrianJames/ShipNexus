@@ -1,9 +1,11 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { count, desc, eq } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { deploymentJobs } from '../database/schema';
+import { DeploymentJob, deploymentJobs } from '../database/schema';
 import * as schema from '../database/schema';
 import { DATABASE_CLIENT } from '../database/database.provider';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
+import { QueryDeploymentsDto } from './dto/query-deployments.dto';
 import { SqsService } from '../sqs/sqs.service';
 
 @Injectable()
@@ -48,7 +50,47 @@ export class DeploymentsService {
     return job;
   }
 
-  async findAll() {
-    return this.db.select().from(deploymentJobs);
+  async findAll(query: QueryDeploymentsDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
+    const where = query.status
+      ? eq(deploymentJobs.status, query.status)
+      : undefined;
+
+    const dataQuery = this.db
+      .select()
+      .from(deploymentJobs)
+      .where(where)
+      .orderBy(desc(deploymentJobs.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const countQuery = this.db
+      .select({ total: count() })
+      .from(deploymentJobs)
+      .where(where);
+
+    const [data, [{ total }]] = await Promise.all([dataQuery, countQuery]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async findOne(id: string): Promise<DeploymentJob> {
+    const [job] = await this.db
+      .select()
+      .from(deploymentJobs)
+      .where(eq(deploymentJobs.id, id));
+
+    if (!job) {
+      throw new NotFoundException(`Deployment job ${id} not found`);
+    }
+
+    return job;
   }
 }
