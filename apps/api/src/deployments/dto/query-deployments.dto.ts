@@ -1,6 +1,9 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
-import type { DeploymentStatus } from '../../database/schema';
+import {
+  deploymentStatusEnum,
+  type DeploymentStatus,
+} from '../../database/schema';
 
 export class QueryDeploymentsDto {
   @IsOptional()
@@ -17,6 +20,6 @@ export class QueryDeploymentsDto {
   limit?: number = 10;
 
   @IsOptional()
-  @IsIn(['pending', 'queued', 'running', 'success', 'failed', 'cancelled'])
+  @IsIn(deploymentStatusEnum.enumValues)
   status?: DeploymentStatus;
 }

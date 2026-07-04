@@ -27,8 +27,9 @@ export default function Error({
           Dashboard unavailable
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Deployment data could not be loaded. Check the database connection and
-          try again.
+          Deployment data could not be loaded. Check the deployments API
+          request path, API service health, and configured API URL, then try
+          again.
         </p>
         {error.digest ? (
           <p className="mt-3 font-mono text-xs text-slate-500">

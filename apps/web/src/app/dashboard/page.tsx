@@ -1,7 +1,7 @@
 import DeploymentDashboard from '@/components/DeploymentDashboard';
 import type { DeploymentJob } from '@/database/schema';
 
-const API_URL = process.env.API_URL ?? "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type DeploymentsResponse = {
   data: DeploymentJob[];
@@ -15,6 +15,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   try {
+    if (!API_URL) {
+      throw new Error('NEXT_PUBLIC_API_URL is not set');
+    }
+
     const response = await fetch(`${API_URL}/deployments?page=1&limit=10`, {
       cache: "no-store",
     });

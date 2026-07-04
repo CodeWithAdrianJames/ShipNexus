@@ -8,6 +8,8 @@ import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { QueryDeploymentsDto } from './dto/query-deployments.dto';
 import { SqsService } from '../sqs/sqs.service';
 
+type RedactedDeploymentJob = Omit<DeploymentJob, 'payload' | 'errorMessage'>;
+
 @Injectable()
 export class DeploymentsService {
   private readonly logger = new Logger(DeploymentsService.name);
@@ -74,14 +76,14 @@ export class DeploymentsService {
     const [data, [{ total }]] = await Promise.all([dataQuery, countQuery]);
 
     return {
-      data,
+      data: data.map((job) => this.redactDeploymentJob(job)),
       total,
       page,
       limit,
     };
   }
 
-  async findOne(id: string): Promise<DeploymentJob> {
+  async findOne(id: string): Promise<RedactedDeploymentJob> {
     const [job] = await this.db
       .select()
       .from(deploymentJobs)
@@ -91,6 +93,11 @@ export class DeploymentsService {
       throw new NotFoundException(`Deployment job ${id} not found`);
     }
 
-    return job;
+    return this.redactDeploymentJob(job);
+  }
+
+  private redactDeploymentJob(job: DeploymentJob): RedactedDeploymentJob {
+    const { payload: _payload, errorMessage: _errorMessage, ...safeJob } = job;
+    return safeJob;
   }
 }

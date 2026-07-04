@@ -1,5 +1,7 @@
-import DashboardStaticPage from "@/components/dashboard/DashboardStaticPage";
+import DashboardPage from "../page";
 
-export default function DeploymentsPage() {
-  return <DashboardStaticPage page="deployments" />;
+export const dynamic = "force-dynamic";
+
+export default async function DeploymentsPage() {
+  return DashboardPage();
 }
