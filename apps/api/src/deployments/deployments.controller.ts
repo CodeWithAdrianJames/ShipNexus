@@ -9,11 +9,13 @@ import {
   ParseUUIDPipe,
   Query,
   UseGuards,
+  Headers,
 } from '@nestjs/common';
 import { DeploymentsService } from './deployments.service';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { QueryDeploymentsDto } from './dto/query-deployments.dto';
 import { GithubWebhookGuard } from './guards/github-webhook.guard';
+import { mapGithubWebhookToDeployment } from './github-webhook.mapper';
 
 @Controller('deployments')
 export class DeploymentsController {
@@ -28,8 +30,30 @@ export class DeploymentsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(GithubWebhookGuard)
-  create(@Body() createDeploymentDto: CreateDeploymentDto) {
-    return this.deploymentsService.create(createDeploymentDto);
+  create(
+    @Body() body: unknown,
+    @Headers('x-github-event') githubEvent?: string,
+    @Headers('x-github-delivery') githubDelivery?: string,
+  ) {
+    if (githubEvent) {
+      const deployment = mapGithubWebhookToDeployment(
+        githubEvent,
+        githubDelivery,
+        body,
+      );
+
+      if (!deployment) {
+        return {
+          received: true,
+          event: githubEvent,
+          deliveryId: githubDelivery,
+        };
+      }
+
+      return this.deploymentsService.create(deployment);
+    }
+
+    return this.deploymentsService.create(body as CreateDeploymentDto);
   }
 
   @Get()
