@@ -246,7 +246,7 @@ function StatCard({
   return (
     <div className="p-4" style={cardStyle}>
       <p
-        className="text-xs font-medium uppercase tracking-wide"
+        className="text-xs font-medium uppercase tracking-normal"
         style={{ color: theme.text.label }}
       >
         {label}
@@ -439,7 +439,7 @@ export default async function PipelinesPage() {
             {sections.map((section) => (
               <div key={section.label}>
                 <h2
-                  className="mb-4 text-sm font-semibold uppercase tracking-wide"
+                  className="mb-4 text-sm font-semibold uppercase tracking-normal"
                   style={{ color: theme.text.label }}
                 >
                   {section.label}

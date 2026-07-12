@@ -212,7 +212,7 @@ export default function DeploymentsTable({
         </label>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold" style={{ color: theme.text.body }}>
           {filteredRows.length} deployment{filteredRows.length === 1 ? "" : "s"} found
         </p>
@@ -250,7 +250,7 @@ export default function DeploymentsTable({
                 ].map((heading) => (
                   <th
                     key={heading}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-normal"
                     style={{
                       borderBottom: theme.card.border,
                       color: theme.table.headerText,

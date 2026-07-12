@@ -36,21 +36,21 @@ const metrics = [
     value: "50",
     detail: "Latest jobs",
     icon: LockKeyhole,
-    tone: "bg-blue-50 text-blue-700 ring-blue-100",
+    tone: "bg-[#2b3157] text-[#8da7ff] ring-white/10",
   },
   {
     label: "Refresh cadence",
     value: "10s",
     detail: "Live dashboard",
     icon: TimerReset,
-    tone: "bg-cyan-50 text-cyan-700 ring-cyan-100",
+    tone: "bg-[#163d49] text-[#58d8e8] ring-white/10",
   },
   {
     label: "Pipeline states",
     value: "6",
     detail: "Tracked statuses",
     icon: Workflow,
-    tone: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    tone: "bg-[#163b38] text-[#5ee0b1] ring-white/10",
   },
 ];
 
@@ -74,37 +74,37 @@ const features = [
     title: "Smart orchestration",
     copy: "Model deployment workflows with structured status, trigger, service, and environment context.",
     icon: Workflow,
-    tone: "bg-blue-50 text-blue-700 ring-blue-100",
+    tone: "bg-[#282d54] text-[#91a5ff] ring-white/10",
   },
   {
     title: "Real-time monitoring",
     copy: "Monitor recent jobs, status mix, durations, triggers, and rollout velocity from one command center.",
     icon: Activity,
-    tone: "bg-cyan-50 text-cyan-700 ring-cyan-100",
+    tone: "bg-[#153b45] text-[#67d5e5] ring-white/10",
   },
   {
     title: "Environment control",
     copy: "Track which services are moving through production, staging, and preview workflows without digging through logs.",
     icon: Layers3,
-    tone: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    tone: "bg-[#153a35] text-[#5ee0b1] ring-white/10",
   },
   {
     title: "Release visibility",
     copy: "Connect GitHub events, image tags, and deployment triggers into a structured pipeline record.",
     icon: GitBranch,
-    tone: "bg-violet-50 text-violet-700 ring-violet-100",
+    tone: "bg-[#34204a] text-[#c89cff] ring-white/10",
   },
   {
     title: "Failure recovery",
     copy: "Surface failed, queued, running, cancelled, and successful jobs so teams can respond with confidence.",
     icon: ShieldCheck,
-    tone: "bg-rose-50 text-rose-700 ring-rose-100",
+    tone: "bg-[#47203a] text-[#ff78b7] ring-white/10",
   },
   {
     title: "Webhook automation",
     copy: "Turn GitHub and release events into auditable deployment records that stay visible to every team.",
     icon: Webhook,
-    tone: "bg-amber-50 text-amber-700 ring-amber-100",
+    tone: "bg-[#49371d] text-[#ffc66d] ring-white/10",
   },
 ];
 
@@ -157,32 +157,32 @@ function DashboardPreview() {
     {
       label: "Build",
       value: "128",
-      tone: "text-blue-700",
-      bar: "bg-blue-600",
+      tone: "text-[#526dff]",
+      bar: "bg-[#526dff]",
       width: "92%",
       icon: Code2,
     },
     {
       label: "Scan",
       value: "124",
-      tone: "text-amber-700",
-      bar: "bg-amber-500",
+      tone: "text-[#c66a13]",
+      bar: "bg-[#f59e42]",
       width: "86%",
       icon: ShieldCheck,
     },
     {
       label: "Deploy",
       value: "98",
-      tone: "text-emerald-700",
-      bar: "bg-emerald-500",
+      tone: "text-[#168a68]",
+      bar: "bg-[#2dcf9b]",
       width: "76%",
       icon: Rocket,
     },
     {
       label: "Observe",
       value: "98.7%",
-      tone: "text-violet-700",
-      bar: "bg-violet-500",
+      tone: "text-[#d33f8d]",
+      bar: "bg-[#ef5aa5]",
       width: "94%",
       icon: Activity,
     },
@@ -190,141 +190,107 @@ function DashboardPreview() {
 
   return (
     <div
-      className="overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-2xl shadow-blue-950/10"
+      className="relative h-[410px] sm:h-[430px] lg:h-[440px]"
       aria-label="ShipNexus dashboard preview"
     >
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-700 text-white">
-            <Rocket className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-slate-950">ShipNexus</p>
-            <p className="text-xs text-slate-500">Pipeline overview</p>
-          </div>
-        </div>
-        <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600">
-          <TimerReset className="h-3.5 w-3.5" aria-hidden="true" />
-          Last 24 hours
-        </div>
-      </div>
-
-      <div className="grid gap-0 xl:grid-cols-[132px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-slate-200 bg-slate-50/70 p-3 xl:block">
-          <div className="space-y-1.5">
-            {["Overview", "Pipelines", "Deployments", "Environments", "Releases"].map(
-              (item, index) => (
-                <div
-                  key={item}
-                  className={`rounded-lg px-3 py-2 text-[11px] font-semibold ${
-                    index === 0
-                      ? "bg-blue-700 text-white shadow-sm shadow-blue-200"
-                      : "text-slate-500"
-                  }`}
-                >
-                  {item}
-                </div>
-              ),
-            )}
-          </div>
-        </aside>
-
-        <div className="min-w-0 bg-[#f6f8fc] p-3 sm:p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="absolute inset-x-0 top-0 mx-auto w-full overflow-hidden rounded-lg border border-white/15 bg-[#0d0b18] shadow-[0_30px_90px_rgba(4,3,16,0.5)] md:w-[82%]">
+        <div className="flex items-center justify-between border-b border-white/10 bg-[#151225] px-3 py-3 sm:px-4">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#526dff] text-white">
+              <Rocket className="h-4 w-4" aria-hidden="true" />
+            </span>
             <div>
-              <p className="text-xs font-semibold text-blue-700">
-                Deployment overview
-              </p>
-              <h3 className="mt-1 text-lg font-semibold text-slate-950 sm:text-xl">
-                Operational command center
-              </h3>
-            </div>
-            <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm">
-              <CirclePlay className="h-4 w-4 text-violet-600" aria-hidden="true" />
-              2 active workflows
+              <p className="text-sm font-semibold text-white">ShipNexus</p>
+              <p className="text-xs text-[#9993aa]">Pipeline overview</p>
             </div>
           </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-            {stages.map((stage) => {
-              const Icon = stage.icon;
-              return (
-                <div
-                  key={stage.label}
-                  className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold text-slate-600">
-                      {stage.label}
-                    </p>
-                    <Icon
-                      className={`h-4 w-4 ${stage.tone}`}
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <p className={`mt-2 text-2xl font-semibold ${stage.tone}`}>
-                    {stage.value}
-                  </p>
-                  <div className="mt-3 h-1.5 rounded-full bg-slate-100">
-                    <div
-                      className={`h-full rounded-full ${stage.bar}`}
-                      style={{ width: stage.width }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+          <div className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-[#d2cedd]">
+            <TimerReset className="h-3.5 w-3.5" aria-hidden="true" />
+            Last 24 hours
           </div>
+        </div>
 
-          <div className="mt-4 grid gap-3 2xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-950">
-                  Deployment flow
+        <div className="grid gap-0 md:grid-cols-[116px_minmax(0,1fr)]">
+          <aside className="hidden border-r border-white/10 bg-[#110e20] p-2.5 md:block">
+            <div className="space-y-1">
+              {["Overview", "Pipelines", "Deployments", "Environments", "Releases"].map(
+                (item, index) => (
+                  <div
+                    key={item}
+                    className={`rounded-md px-2.5 py-2 text-[10px] font-semibold ${
+                      index === 0
+                        ? "bg-[#526dff] text-white"
+                        : "text-[#928ca3]"
+                    }`}
+                  >
+                    {item}
+                  </div>
+                ),
+              )}
+            </div>
+          </aside>
+
+          <div className="min-w-0 bg-[#f1f3f8] p-2.5 sm:p-3.5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold text-[#4059c7]">
+                  Deployment overview
                 </p>
-                <span className="text-xs font-semibold text-emerald-700">
-                  Healthy
-                </span>
+                <h3 className="mt-0.5 text-base font-semibold text-[#121528] sm:text-lg">
+                  Operational command center
+                </h3>
               </div>
-              <div className="mt-6 flex items-center justify-between gap-2">
-                {["dev", "staging", "prod"].map((env, index) => (
-                  <div key={env} className="flex flex-1 items-center gap-2">
-                    <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                      <span
-                        className={`flex h-7 w-7 items-center justify-center rounded-full border-2 bg-white ${
-                          index === 1
-                            ? "border-blue-600 text-blue-700"
-                            : "border-emerald-500 text-emerald-700"
-                        }`}
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </span>
-                      <span className="text-xs font-semibold text-slate-700">
-                        {env}
-                      </span>
-                    </div>
-                    {index < 2 ? (
-                      <span className="h-px flex-1 bg-blue-200" />
-                    ) : null}
-                  </div>
-                ))}
+              <div className="inline-flex w-fit items-center gap-2 rounded-md border border-[#dfe3ed] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#555b70]">
+                <CirclePlay className="h-3.5 w-3.5 text-[#d33f8d]" aria-hidden="true" />
+                2 active workflows
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-slate-950">Success rate</p>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <p className="text-3xl font-semibold text-slate-950">98.7%</p>
-                <span className="text-xs font-semibold text-emerald-700">
-                  +2.4% vs yesterday
-                </span>
-              </div>
-              <div className="mt-5 flex h-16 items-end gap-1">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {stages.map((stage) => {
+                const Icon = stage.icon;
+                return (
+                  <div
+                    key={stage.label}
+                    className="rounded-md border border-[#dfe3ed] bg-white p-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-semibold text-[#60667a]">
+                        {stage.label}
+                      </p>
+                      <Icon
+                        className={`h-3.5 w-3.5 ${stage.tone}`}
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <p className={`mt-1.5 text-xl font-semibold ${stage.tone}`}>
+                      {stage.value}
+                    </p>
+                    <div className="mt-2 h-1 rounded-full bg-[#e9ecf3]">
+                      <div
+                        className={`h-full rounded-full ${stage.bar}`}
+                        style={{ width: stage.width }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div
+              className="mt-2 rounded-md border border-[#dfe3ed] bg-white p-3"
+              aria-hidden="true"
+            >
+              <div className="flex h-16 items-end gap-1">
                 {[52, 48, 55, 51, 65, 88, 74, 59, 63, 70, 66, 79].map(
                   (height, index) => (
                     <span
                       key={`${height}-${index}`}
-                      className="flex-1 rounded-t bg-cyan-400"
+                      className={`flex-1 rounded-t-sm ${
+                        index === 5 || index === 11
+                          ? "bg-[#ef5aa5]"
+                          : "bg-[#56cfe1]"
+                        }`}
                       style={{ height: `${height}%` }}
                     />
                   ),
@@ -332,46 +298,107 @@ function DashboardPreview() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-4 rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <p className="text-sm font-semibold text-slate-950">
-                Recent deployments
-              </p>
-              <span className="text-xs font-semibold text-slate-500">
-                Last 50
+      <div className="absolute left-0 top-[13.25rem] z-20 hidden w-[290px] overflow-hidden rounded-lg border border-[#49415f] bg-[#1a1630] shadow-[0_24px_60px_rgba(4,3,16,0.38)] lg:block xl:w-[315px]">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <p className="text-sm font-semibold text-white">Recent deployments</p>
+          <span className="text-xs font-semibold text-[#9892a7]">Last 50</span>
+        </div>
+        <div className="divide-y divide-white/10">
+          {rows.map(([service, env, status, duration]) => (
+            <div
+              key={`${service}-${env}`}
+              className="grid grid-cols-[minmax(0,1fr)_65px_48px] gap-2 px-4 py-3 text-[11px]"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-white">{service}</p>
+                <p className="mt-0.5 truncate text-[#8f899f]">{env}</p>
+              </div>
+              <span
+                className={`self-center font-semibold ${
+                  status === "success"
+                    ? "text-[#5ee0b1]"
+                    : status === "running"
+                      ? "text-[#ff70b3]"
+                      : "text-[#8da7ff]"
+                }`}
+              >
+                {status}
+              </span>
+              <span className="self-center text-right font-mono text-[#aaa4b5]">
+                {duration}
               </span>
             </div>
-            <div className="divide-y divide-slate-100">
-              {rows.map(([service, env, status, duration]) => (
-                <div
-                  key={`${service}-${env}`}
-                  className="grid grid-cols-[minmax(110px,1fr)_minmax(70px,0.6fr)_minmax(72px,0.6fr)] gap-3 px-4 py-3 text-xs sm:grid-cols-[minmax(140px,1fr)_90px_90px_60px]"
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute right-0 top-[12.5rem] z-20 hidden w-[280px] rounded-lg border border-[#49415f] bg-[#1a1630] p-4 shadow-[0_24px_60px_rgba(4,3,16,0.38)] lg:block xl:w-[305px]">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-white">Deployment flow</p>
+          <span className="text-xs font-semibold text-[#5ee0b1]">Healthy</span>
+        </div>
+        <div className="mt-5 flex items-center justify-between gap-1.5">
+          {["dev", "staging", "prod"].map((env, index) => (
+            <div key={env} className="flex flex-1 items-center gap-1.5">
+              <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border-2 bg-[#1a1630] ${
+                    index === 1
+                      ? "border-[#7890ff] text-[#a5b4ff]"
+                      : "border-[#45cda0] text-[#5ee0b1]"
+                  }`}
                 >
-                  <span className="truncate font-semibold text-slate-900">
-                    {service}
-                  </span>
-                  <span className="truncate text-slate-500">{env}</span>
-                  <span
-                    className={`font-semibold ${
-                      status === "success"
-                        ? "text-emerald-700"
-                        : status === "running"
-                          ? "text-violet-700"
-                          : "text-sky-700"
-                    }`}
-                  >
-                    {status}
-                  </span>
-                  <span className="hidden font-mono text-slate-500 sm:inline">
-                    {duration}
-                  </span>
-                </div>
-              ))}
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+                <span className="text-[11px] font-semibold text-[#d4cfdd]">
+                  {env}
+                </span>
+              </div>
+              {index < 2 ? (
+                <span className="h-px flex-1 bg-[#60577a]" />
+              ) : null}
             </div>
+          ))}
+        </div>
+        <div className="mt-4 border-t border-white/10 pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-[#aaa4b5]">Success rate</p>
+              <p className="mt-1 text-[10px] font-semibold text-[#5ee0b1]">
+                +2.4% vs yesterday
+              </p>
+            </div>
+            <p className="text-xl font-semibold text-white">98.7%</p>
+          </div>
+          <div className="mt-2 flex h-8 items-end gap-1">
+            {[42, 58, 52, 76, 64, 88, 72, 96].map((height, index) => (
+              <span
+                key={`${height}-${index}`}
+                className={`flex-1 rounded-t-sm ${
+                  index === 7 ? "bg-[#ef5aa5]" : "bg-[#526dff]"
+                }`}
+                style={{ height: `${height}%` }}
+              />
+            ))}
           </div>
         </div>
       </div>
+
+      <span
+        className="absolute bottom-3 left-[8%] hidden h-2 w-2 rounded-sm bg-[#526dff] lg:block"
+        aria-hidden="true"
+      />
+      <span
+        className="absolute right-[8%] bottom-3 hidden h-2 w-2 rounded-sm bg-[#ef5aa5] lg:block"
+        aria-hidden="true"
+      />
+      <span
+        className="absolute inset-x-[8%] bottom-[0.95rem] hidden border-t border-white/10 lg:block"
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -379,32 +406,41 @@ function DashboardPreview() {
 function HeroScene() {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#eef6ff_0%,#f7fbff_48%,#ffffff_100%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(#93c5fd_1px,transparent_1px)] [background-size:22px_22px] opacity-25" />
-      <div className="absolute inset-x-0 top-0 bottom-0 bg-[linear-gradient(115deg,rgba(37,99,235,0.16)_0%,rgba(6,182,212,0.12)_48%,rgba(255,255,255,0)_100%)] [mask-image:linear-gradient(to_bottom,black_0%,black_68%,transparent_100%)]" />
+      <div className="absolute inset-y-0 left-[8%] border-l border-white/[0.045]" />
+      <div className="absolute inset-y-0 right-[8%] border-r border-white/[0.045]" />
+      <div className="absolute left-1/2 top-0 h-[28rem] border-l border-white/[0.045]" />
+      <div className="absolute left-1/4 top-[28rem] bottom-0 border-l border-white/[0.035]" />
+      <div className="absolute right-1/4 top-[28rem] bottom-0 border-r border-white/[0.035]" />
     </div>
   );
 }
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-950">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-white shadow-sm shadow-blue-200">
+    <main className="min-h-screen overflow-x-clip bg-[#171329] text-white selection:bg-[#ef5aa5] selection:text-white">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#151225]/95 text-white backdrop-blur-md">
+        <div className="absolute inset-x-0 top-0 flex h-1" aria-hidden="true">
+          <span className="w-1/2 bg-[#526dff]" />
+          <span className="w-1/2 bg-[#ef5aa5]" />
+        </div>
+        <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-[#8398ff] focus:ring-offset-4 focus:ring-offset-[#151225]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#526dff] text-white">
               <Rocket className="h-4.5 w-4.5" aria-hidden="true" />
             </span>
-            <span className="text-lg font-semibold max-[420px]:hidden">
+            <span className="text-lg font-semibold max-[380px]:hidden">
               ShipNexus
             </span>
           </Link>
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Landing">
+          <nav className="hidden items-center gap-8 lg:flex" aria-label="Landing">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm font-semibold text-slate-600 transition hover:text-slate-950"
+                className="text-[13px] font-semibold text-[#bdb8ca] transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8398ff]"
               >
                 {link.label}
               </a>
@@ -412,7 +448,7 @@ export default function LandingPage() {
           </nav>
           <Link
             href="/dashboard"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-700 px-3 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:px-4"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-[#171329] transition-colors hover:bg-[#e9ebf4] focus:outline-none focus:ring-2 focus:ring-[#8398ff] focus:ring-offset-2 focus:ring-offset-[#151225] sm:px-4"
           >
             Launch Dashboard
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -420,94 +456,113 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
+      <section className="relative h-[calc(100svh-5.5rem)] min-h-[590px] max-h-[900px] overflow-hidden bg-[#171329] text-white">
         <HeroScene />
-        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 xl:pt-24">
-          <div className="grid gap-10 lg:min-h-[600px] lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center xl:min-h-[620px] xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:gap-12">
-            <div className="max-w-2xl lg:pb-6">
-              <div className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white/85 px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm">
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                Enterprise deployment orchestration
-              </div>
-              <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-normal text-slate-950 sm:text-6xl lg:text-6xl xl:text-7xl">
-                Ship software with one clear{" "}
-                <span className="text-blue-700">deployment</span> command
-                center.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-slate-700">
-                ShipNexus helps DevOps and platform engineering teams manage,
-                monitor, and automate deployment workflows across services,
-                environments, and release triggers.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-blue-700 px-5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  View Dashboard
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-                <a
-                  href="#product"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-blue-200 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  See Product Preview
-                  <Route className="h-4 w-4" aria-hidden="true" />
-                </a>
-              </div>
+        <div className="relative mx-auto max-w-[90rem] px-4 pt-9 sm:px-6 sm:pt-12 lg:px-8 lg:pt-14">
+          <div className="mx-auto max-w-[76rem] text-center">
+            <div className="inline-flex items-center gap-3 text-xs font-semibold uppercase text-[#aebaff] sm:text-sm">
+              <span className="hidden h-px w-8 bg-[#526dff] min-[360px]:block" />
+              <Sparkles className="h-4 w-4 text-[#ef5aa5]" aria-hidden="true" />
+              Enterprise deployment orchestration
             </div>
-
-            <div className="w-full max-w-[720px] justify-self-center lg:max-w-none lg:justify-self-end">
-              <DashboardPreview />
+            <h1 className="mx-auto mt-4 text-4xl font-semibold leading-[1.02] tracking-normal text-white sm:mt-5 sm:text-6xl lg:text-7xl xl:text-[5rem]">
+              <span className="xl:whitespace-nowrap">
+                Ship software with one clear
+              </span>{" "}
+              <br className="hidden xl:block" />
+              <span className="relative top-0.5 inline-block -rotate-2 px-1 text-[#ff5aa8]">
+                deployment
+              </span>{" "}
+              command center.
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#c9c5d3] sm:mt-5 sm:text-lg sm:leading-8">
+              ShipNexus helps DevOps and platform engineering teams manage,
+              monitor, and automate deployment workflows across services,
+              environments, and release triggers.
+            </p>
+            <div className="mt-6 flex flex-col justify-center gap-2 sm:mt-7 sm:flex-row sm:gap-3">
+              <Link
+                href="/dashboard"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-[#171329] transition-colors hover:bg-[#e9ebf4] focus:outline-none focus:ring-2 focus:ring-[#8398ff] focus:ring-offset-2 focus:ring-offset-[#171329] sm:h-12"
+              >
+                View Dashboard
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <a
+                href="#product"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#f46aac] bg-transparent px-5 text-sm font-semibold text-white transition-colors hover:bg-[#ef5aa5]/10 focus:outline-none focus:ring-2 focus:ring-[#f46aac] focus:ring-offset-2 focus:ring-offset-[#171329] sm:h-12"
+              >
+                See Product Preview
+                <Route className="h-4 w-4" aria-hidden="true" />
+              </a>
             </div>
           </div>
 
-          <div className="mt-8 grid overflow-hidden rounded-lg border border-slate-200 bg-white/85 shadow-xl shadow-blue-950/5 backdrop-blur sm:grid-cols-3 lg:mt-4 xl:mt-6">
-            {metrics.map((metric) => {
-              const Icon = metric.icon;
-              return (
-                <div
-                  key={metric.label}
-                  className="flex items-center gap-4 border-b border-slate-200 p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"
-                >
-                  <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ring-1 ${metric.tone}`}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-500">
-                      {metric.label}
-                    </p>
-                    <div className="mt-1 flex items-baseline gap-2">
-                      <p className="text-2xl font-semibold text-slate-950">
-                        {metric.value}
-                      </p>
-                      <p className="text-sm text-slate-600">{metric.detail}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="relative mx-auto mt-8 w-full max-w-7xl sm:mt-11">
+            <span
+              className="absolute -top-5 inset-x-0 border-t border-white/[0.045]"
+              aria-hidden="true"
+            />
+            <span
+              className="absolute -left-1 -top-6 h-2 w-2 rounded-full bg-[#526dff]"
+              aria-hidden="true"
+            />
+            <span
+              className="absolute -right-1 -top-6 h-2 w-2 rounded-full bg-[#ef5aa5]"
+              aria-hidden="true"
+            />
+            <DashboardPreview />
           </div>
         </div>
       </section>
 
-      <section id="product" className="px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase text-blue-700">
+      <section id="product" className="scroll-mt-20 border-t border-white/10 bg-[#171329] px-4 pb-28 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-6xl overflow-hidden border-x border-b border-white/10 bg-[#211b37] text-white sm:grid-cols-3">
+          {metrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div
+                key={metric.label}
+                className="flex items-center gap-4 border-b border-white/10 p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 lg:px-7"
+              >
+                <span
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md ring-1 ${metric.tone}`}
+                >
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-[#aba6b7] sm:text-sm">
+                    {metric.label}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                    <p className="text-2xl font-semibold text-white">
+                      {metric.value}
+                    </p>
+                    <p className="text-xs text-[#c7c2d0] sm:text-sm">
+                      {metric.detail}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mx-auto grid max-w-7xl gap-12 pt-24 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-16">
+          <div className="max-w-xl">
+            <p className="flex items-center gap-3 text-xs font-semibold uppercase text-[#91a5ff] sm:text-sm">
+              <span className="h-px w-8 bg-[#526dff]" />
               Product preview
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
+            <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
               A live operating layer for deployment teams.
             </h2>
-            <p className="mt-4 text-base leading-7 text-slate-600">
+            <p className="mt-5 text-base leading-7 text-[#bdb7c7]">
               ShipNexus turns raw deployment jobs into an executive-ready view
               of rollout health, service activity, pipeline failures, and recent
               operational history.
             </p>
-            <div className="mt-6 grid gap-3">
+            <div className="mt-7 grid gap-3.5">
               {[
                 "Live Postgres-backed deployment records",
                 "Dashboard-first workflow for active incidents",
@@ -515,67 +570,75 @@ export default function LandingPage() {
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
                   <CheckCircle2
-                    className="h-5 w-5 text-emerald-600"
+                    className="h-5 w-5 shrink-0 text-[#5ee0b1]"
                     aria-hidden="true"
                   />
-                  <span className="text-sm font-semibold text-slate-700">
+                  <span className="text-sm font-semibold text-[#d8d3df]">
                     {item}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid overflow-hidden rounded-lg border border-[#373149] bg-[#171329] text-white shadow-[0_24px_60px_rgba(31,25,51,0.16)] sm:grid-cols-2">
             {[
               {
                 title: "Pipeline health",
                 value: "98.7%",
                 copy: "Success trends, rollout activity, and failed jobs stay visible at a glance.",
                 icon: Activity,
-                tone: "bg-cyan-50 text-cyan-700 ring-cyan-100",
+                tone: "bg-[#153b45] text-[#67d5e5] ring-white/10",
+                valueTone: "text-[#67d5e5]",
               },
               {
                 title: "Release context",
                 value: "24h",
                 copy: "Recent service movement, triggers, and environments are grouped by release window.",
                 icon: GitCommitHorizontal,
-                tone: "bg-blue-50 text-blue-700 ring-blue-100",
+                tone: "bg-[#282d54] text-[#91a5ff] ring-white/10",
+                valueTone: "text-[#91a5ff]",
               },
               {
                 title: "Environment flow",
                 value: "3 lanes",
                 copy: "Dev, staging, and production states are presented as one operational path.",
                 icon: Layers3,
-                tone: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+                tone: "bg-[#153a35] text-[#5ee0b1] ring-white/10",
+                valueTone: "text-[#5ee0b1]",
               },
               {
                 title: "Incident signal",
                 value: "Live",
                 copy: "Running, queued, cancelled, failed, and successful jobs are easy to separate.",
                 icon: RadioTower,
-                tone: "bg-violet-50 text-violet-700 ring-violet-100",
+                tone: "bg-[#47203a] text-[#ff78b7] ring-white/10",
+                valueTone: "text-[#ff78b7]",
               },
-            ].map((item) => {
+            ].map((item, index) => {
               const Icon = item.icon;
               return (
                 <article
                   key={item.title}
-                  className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70"
+                  className={`p-5 sm:p-6 ${
+                    index < 3 ? "border-b border-white/10" : ""
+                  } ${index === 0 || index === 2 ? "sm:border-r" : ""} ${
+                    index === 2 ? "sm:border-b-0" : ""
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-lg ring-1 ${item.tone}`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-md ring-1 ${item.tone}`}
                     >
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <p className="text-2xl font-semibold text-slate-950">
+                    <p className={`font-mono text-2xl font-semibold ${item.valueTone}`}>
                       {item.value}
                     </p>
                   </div>
-                  <h3 className="mt-5 text-base font-semibold text-slate-950">
+                  <h3 className="mt-5 text-base font-semibold text-white">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                  <p className="mt-2 text-sm leading-6 text-[#bdb7c7]">
                     {item.copy}
                   </p>
                 </article>
@@ -585,24 +648,37 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="problem" className="border-y border-slate-200 bg-[#f6f9ff] px-4 py-20 sm:px-6 lg:px-8">
+      <section id="problem" className="scroll-mt-20 border-t border-white/10 bg-[#171329] px-4 py-24 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase text-rose-700">
+          <div className="max-w-3xl">
+            <p className="flex items-center gap-3 text-xs font-semibold uppercase text-[#ff78b7] sm:text-sm">
+              <span className="h-px w-8 bg-[#ef5aa5]" />
               The problem
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">
+            <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
               Deployment operations break down when teams lose shared context.
             </h2>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {problems.map((problem) => (
+          <div className="mt-12 grid border-y border-white/10 md:grid-cols-3">
+            {problems.map((problem, index) => (
               <article
                 key={problem.title}
-                className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 transition hover:border-blue-200 hover:shadow-md"
+                className={`border-b border-white/10 py-7 last:border-b-0 md:border-b-0 md:px-8 md:py-9 ${
+                  index < problems.length - 1 ? "md:border-r" : ""
+                } ${index === 0 ? "md:pl-0" : ""} ${
+                  index === problems.length - 1 ? "md:pr-0" : ""
+                }`}
               >
-                <h3 className="text-lg font-semibold">{problem.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
+                <span
+                  className={`block h-1 w-10 ${
+                    index === 1 ? "bg-[#ef5aa5]" : "bg-[#526dff]"
+                  }`}
+                  aria-hidden="true"
+                />
+                <h3 className="mt-6 text-lg font-semibold text-white">
+                  {problem.title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-[#aaa4b5]">
                   {problem.copy}
                 </p>
               </article>
@@ -611,43 +687,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="px-4 py-20 sm:px-6 lg:px-8">
+      <section id="features" className="scroll-mt-20 border-t border-white/10 bg-[#171329] px-4 py-28 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase text-blue-700">
+            <div className="max-w-3xl">
+              <p className="flex items-center gap-3 text-xs font-semibold uppercase text-[#91a5ff] sm:text-sm">
+                <span className="h-px w-8 bg-[#526dff]" />
                 Features
               </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">
+              <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
                 Built for platform engineering visibility.
               </h2>
             </div>
             <Link
               href="/dashboard"
-              className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-4 text-sm font-semibold text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-md border border-white/20 bg-transparent px-4 text-sm font-semibold text-white transition-colors hover:border-[#ef5aa5] hover:text-[#ff78b7] focus:outline-none focus:ring-2 focus:ring-[#526dff] focus:ring-offset-2 focus:ring-offset-[#171329]"
             >
               Open live view
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-14 grid gap-px border-y border-white/10 bg-white/10 md:grid-cols-2">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
                 <article
                   key={feature.title}
-                  className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                  className="bg-[#171329] p-7 transition-colors hover:bg-[#1d1830] sm:min-h-[250px] sm:p-9"
                 >
                   <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-lg ring-1 ${feature.tone}`}
+                    className={`flex h-12 w-12 items-center justify-center rounded-md ring-1 ${feature.tone}`}
                   >
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
-                  <h3 className="mt-5 text-lg font-semibold">
+                  <h3 className="mt-8 text-xl font-semibold text-white">
                     {feature.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 max-w-md text-sm leading-6 text-[#aaa4b5]">
                     {feature.copy}
                   </p>
                 </article>
@@ -657,91 +734,118 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="workflow" className="border-y border-slate-200 bg-[#f8fbff] px-4 py-20 sm:px-6 lg:px-8">
+      <section id="workflow" className="scroll-mt-20 border-t border-white/10 bg-[#171329] px-4 py-28 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase text-blue-700">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="flex items-center justify-center gap-3 text-xs font-semibold uppercase text-[#91a5ff] sm:text-sm">
+              <span className="h-px w-8 bg-[#526dff]" />
               How it works
+              <span className="h-px w-8 bg-[#526dff]" />
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
+            <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
               From trigger to operational signal.
             </h2>
-            <p className="mt-4 text-base leading-7 text-slate-600">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#bdb7c7]">
               ShipNexus is designed around the deployment lifecycle: capture the
               event, structure the workflow, observe health, and improve the
               next release.
             </p>
           </div>
-          <div className="mt-12 grid gap-4 md:grid-cols-4">
-            {workflowSteps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <article
-                  key={step.title}
-                  className="relative rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 transition hover:border-blue-200 hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+          <div className="relative mt-16">
+            <span
+              className="absolute left-[12.5%] right-[12.5%] top-14 hidden border-t border-white/20 md:block"
+              aria-hidden="true"
+            />
+            <div className="grid border-y border-white/10 md:grid-cols-4 md:border-y-0">
+              {workflowSteps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <article
+                    key={step.title}
+                    className="relative border-b border-white/10 py-7 last:border-b-0 md:border-b-0 md:px-6 md:py-7"
+                  >
+                    <div className="relative z-10 flex items-center justify-between">
+                    <div
+                      className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-[#171329] ring-1 ${
+                        index === 1
+                          ? "bg-[#47203a] text-[#ff78b7] ring-[#6b3056]"
+                          : index === 2
+                            ? "bg-[#153b45] text-[#67d5e5] ring-[#245967]"
+                            : "bg-[#282d54] text-[#91a5ff] ring-[#3d4678]"
+                      }`}
+                    >
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <span className="font-mono text-sm text-slate-400">
+                    <span className="font-mono text-sm text-[#7f788e]">
                       0{index + 1}
                     </span>
                   </div>
-                  <h3 className="mt-6 text-lg font-semibold text-slate-950">
+                  <h3 className="mt-7 text-lg font-semibold text-white">
                     {step.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 text-sm leading-6 text-[#aaa4b5]">
                     {step.copy}
                   </p>
                 </article>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="architecture" className="px-4 py-20 sm:px-6 lg:px-8">
+      <section id="architecture" className="scroll-mt-20 border-t border-white/10 bg-[#171329] px-4 py-28 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase text-blue-700">
+          <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-16">
+            <div className="max-w-xl">
+              <p className="flex items-center gap-3 text-xs font-semibold uppercase text-[#91a5ff] sm:text-sm">
+                <span className="h-px w-8 bg-[#526dff]" />
                 Architecture
               </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">
-                A workflow model that matches modern DevOps infrastructure.
+              <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
+                A workflow model that matches modern{" "}
+                <span className="text-[#d33f8d]">DevOps infrastructure.</span>
               </h2>
-              <p className="mt-4 text-base leading-7 text-slate-600">
+              <p className="mt-5 text-base leading-7 text-[#bdb7c7]">
                 The current product surface focuses on the command center:
                 normalized deployment records, operational analytics, and the
                 dashboard path teams use during release windows.
               </p>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-[#f6f9ff] p-5 shadow-sm shadow-slate-200/70">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {architectureItems.map((item) => {
+            <div className="overflow-hidden rounded-lg border border-[#343047] bg-[#151225] text-white">
+              <div className="flex h-11 items-center gap-2 border-b border-white/10 px-4" aria-hidden="true">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ef5aa5]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#f1ad4b]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#55d6b2]" />
+              </div>
+              <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+                {architectureItems.map((item, index) => {
                   const Icon = item.icon;
                   return (
-                    <div
-                      key={item.label}
-                      className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/70"
-                    >
-                      <Icon className="h-5 w-5 text-blue-700" aria-hidden="true" />
-                      <p className="mt-4 text-sm font-semibold text-slate-900">
+                    <div key={item.label} className="bg-[#151225] p-5">
+                      <Icon
+                        className={`h-5 w-5 ${
+                          index === 1 || index === 4
+                            ? "text-[#ff6cad]"
+                            : "text-[#7890ff]"
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <p className="mt-4 text-sm font-semibold text-white">
                         {item.label}
                       </p>
                     </div>
                   );
                 })}
               </div>
-              <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/70">
-                <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-700">
-                  <Code2 className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <div className="border-t border-white/10 bg-[#0f0d1b] p-4 sm:p-5">
+                <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-[#d5d0dc]">
+                  <Code2 className="h-4 w-4 text-[#67d5e5]" aria-hidden="true" />
                   <span>Next.js interface</span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <ArrowRight className="h-4 w-4 text-[#746e82]" aria-hidden="true" />
                   <span>Drizzle ORM</span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <ArrowRight className="h-4 w-4 text-[#746e82]" aria-hidden="true" />
                   <span>Postgres deployment data</span>
                 </div>
               </div>
@@ -750,27 +854,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-[#f8fbff] px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
-          <div>
-            <p className="text-sm font-semibold uppercase text-emerald-700">
+      <section className="border-t border-white/10 bg-[#171329] px-4 py-24 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:items-start lg:gap-16">
+          <div className="max-w-lg">
+            <p className="flex items-center gap-3 text-xs font-semibold uppercase text-[#c5ffec] sm:text-sm">
+              <span className="h-px w-8 bg-[#8af0ce]" />
               Benefits
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">
+            <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
               For teams accountable for shipping reliably.
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-px border-y border-white/10 bg-white/10 md:grid-cols-2">
             {benefits.map((benefit) => (
               <div
                 key={benefit}
-                className="flex gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70"
+                className="flex gap-3 bg-[#171329] py-5 md:px-5"
               >
                 <LockKeyhole
-                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[#b9ffe7]"
                   aria-hidden="true"
                 />
-                <p className="text-sm font-semibold leading-6 text-slate-700">
+                <p className="text-sm font-semibold leading-6 text-white">
                   {benefit}
                 </p>
               </div>
@@ -779,53 +884,52 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-lg border border-blue-500/20 bg-[linear-gradient(135deg,#155dfc_0%,#0891b2_100%)] px-6 py-12 text-white shadow-xl shadow-blue-200 md:px-10">
-          <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase text-blue-100">
-                Launch ShipNexus
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">
-                Move from scattered deployment data to a live operations view.
-              </h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50">
-                Open the existing dashboard to explore live deployment jobs,
-                status trends, and pipeline health.
-              </p>
-            </div>
-            <Link
-              href="/dashboard"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-semibold text-slate-950 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-700"
-            >
-              Launch Dashboard
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+      <section className="border-t border-white/10 bg-[#171329] px-4 py-20 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 border-l-4 border-[#ef5aa5] pl-6 md:grid-cols-[1fr_auto] md:items-center md:pl-10">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase text-[#ff83bd] sm:text-sm">
+              Launch ShipNexus
+            </p>
+            <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
+              Move from scattered deployment data to a{" "}
+              <span className="text-[#ff78b7]">live operations view.</span>
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[#c8c3d0]">
+              Open the existing dashboard to explore live deployment jobs,
+              status trends, and pipeline health.
+            </p>
           </div>
+          <Link
+            href="/dashboard"
+            className="inline-flex h-12 w-fit items-center justify-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-[#171329] transition-colors hover:bg-[#e9ebf4] focus:outline-none focus:ring-2 focus:ring-[#8398ff] focus:ring-offset-2 focus:ring-offset-[#171329]"
+          >
+            Launch Dashboard
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+      <footer className="border-t border-white/10 bg-[#0f0d1b] px-4 py-8 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 text-sm text-[#9892a4] md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-700 text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#526dff] text-white">
               <Rocket className="h-4 w-4" aria-hidden="true" />
             </span>
-            <span className="font-semibold text-slate-700">ShipNexus</span>
+            <span className="font-semibold text-white">ShipNexus</span>
           </div>
           <div className="flex flex-wrap gap-5">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="font-semibold transition hover:text-slate-950"
+                className="font-semibold transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8398ff]"
               >
                 {link.label}
               </a>
             ))}
             <Link
               href="/dashboard"
-              className="font-semibold text-blue-700 transition hover:text-blue-800"
+              className="font-semibold text-[#91a5ff] transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8398ff]"
             >
               Dashboard
             </Link>

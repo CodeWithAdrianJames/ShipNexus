@@ -87,7 +87,7 @@ export default function WebhookCard({ event }: { event: WebhookEvent }) {
         }}
       >
         <p
-          className="text-xs font-semibold uppercase tracking-wide"
+          className="text-xs font-semibold uppercase tracking-normal"
           style={{ color: theme.text.label }}
         >
           Payload preview

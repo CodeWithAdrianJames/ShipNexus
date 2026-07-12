@@ -118,7 +118,7 @@ function SummaryItem({
   return (
     <div className="p-4" style={cardStyle}>
       <p
-        className="text-xs font-medium uppercase tracking-wide"
+        className="text-xs font-medium uppercase tracking-normal"
         style={{ color: theme.text.label }}
       >
         {label}

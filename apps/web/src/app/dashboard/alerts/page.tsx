@@ -417,7 +417,7 @@ export default async function AlertsPage() {
               group.alerts.length > 0 ? (
                 <div key={group.severity}>
                   <h2
-                    className="mb-4 text-sm font-semibold uppercase tracking-wide"
+                    className="mb-4 text-sm font-semibold uppercase tracking-normal"
                     style={{ color: theme.text.label }}
                   >
                     {group.label}

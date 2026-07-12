@@ -13,15 +13,9 @@ const cardStyle = {
 };
 
 const inputStyle = {
-  background: theme.card.background,
+  background: theme.table.headerBg,
   border: theme.card.border,
   color: theme.text.primary,
-};
-
-const saveButtonStyle = {
-  background: theme.backButton.color,
-  border: theme.backButton.color,
-  color: theme.card.background,
 };
 
 function saveSettings() {
@@ -62,7 +56,7 @@ function FieldLabel({
   return (
     <label className="block">
       <span
-        className="text-xs font-semibold uppercase tracking-wide"
+        className="text-xs font-semibold uppercase tracking-normal"
         style={{ color: theme.text.label }}
       >
         {label}
@@ -86,7 +80,7 @@ function TextInput({
       type={type}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+      className="w-full rounded-lg px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#526dff]/30"
       style={inputStyle}
     />
   );
@@ -105,7 +99,7 @@ function SelectInput({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+      className="w-full rounded-lg px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#526dff]/30"
       style={inputStyle}
     >
       {options.map((option) => (
@@ -121,8 +115,7 @@ function SaveButton() {
   return (
     <button
       type="button"
-      className="rounded-lg px-4 py-2 text-sm font-semibold"
-      style={saveButtonStyle}
+      className="rounded-lg bg-[#526dff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4059d4] focus:outline-none focus:ring-2 focus:ring-[#7890ff] focus:ring-offset-2 focus:ring-offset-[#1b172d]"
       onClick={saveSettings}
     >
       Save
@@ -140,12 +133,7 @@ function SecondaryButton({
   return (
     <button
       type="button"
-      className="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold"
-      style={{
-        background: theme.table.headerBg,
-        border: theme.card.border,
-        color: theme.text.body,
-      }}
+      className="shrink-0 rounded-lg border border-white/10 bg-[#151225] px-3 py-2 text-sm font-semibold text-[#d4cfdd] transition hover:border-white/20 hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#526dff]"
       onClick={onClick}
     >
       {children}
@@ -177,13 +165,13 @@ function ToggleSwitch({
         <span
           className="h-6 w-11 rounded-full transition"
           style={{
-            background: checked ? theme.backButton.color : theme.table.rowBorder,
+            background: checked ? "#526dff" : theme.table.rowBorder,
             border: theme.card.border,
           }}
         />
         <span
           className="absolute left-1 top-1 h-4 w-4 rounded-full transition peer-checked:translate-x-5"
-          style={{ background: theme.card.background }}
+          style={{ background: theme.text.primary }}
         />
       </span>
     </label>

@@ -156,7 +156,7 @@ function SummaryItem({
   return (
     <div className="p-4" style={cardStyle}>
       <p
-        className="text-xs font-medium uppercase tracking-wide"
+        className="text-xs font-medium uppercase tracking-normal"
         style={{ color: theme.text.label }}
       >
         {label}
@@ -230,7 +230,7 @@ function Metric({
   return (
     <div>
       <p
-        className="text-xs font-medium uppercase tracking-wide"
+        className="text-xs font-medium uppercase tracking-normal"
         style={{ color: theme.text.label }}
       >
         {label}
@@ -251,7 +251,7 @@ function ReleaseCard({ release }: { release: ReleaseSummary }) {
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <p
-            className="text-xs font-medium uppercase tracking-wide"
+            className="text-xs font-medium uppercase tracking-normal"
             style={{ color: theme.text.label }}
           >
             Release
@@ -268,7 +268,7 @@ function ReleaseCard({ release }: { release: ReleaseSummary }) {
 
       <div className="mt-5">
         <p
-          className="text-xs font-medium uppercase tracking-wide"
+          className="text-xs font-medium uppercase tracking-normal"
           style={{ color: theme.text.label }}
         >
           Services deployed
@@ -282,7 +282,7 @@ function ReleaseCard({ release }: { release: ReleaseSummary }) {
 
       <div className="mt-5">
         <p
-          className="text-xs font-medium uppercase tracking-wide"
+          className="text-xs font-medium uppercase tracking-normal"
           style={{ color: theme.text.label }}
         >
           Environments
