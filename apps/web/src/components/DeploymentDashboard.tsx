@@ -123,12 +123,12 @@ const STATUS_FILTERS = [
   { label: "Failed", value: "failed" },
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const PAGE_SIZE = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_STATUSES: DeploymentStatus[] = ["pending", "queued", "running"];
 const RETRY_SECONDS = 15;
-const EMPTY_DEPLOYMENT_CURL = `curl -X POST http://localhost:3000/deployments \\
+const EMPTY_DEPLOYMENT_CURL = `curl -X POST ${API_URL}/deployments \\
   -H "Content-Type: application/json" \\
   -d '{"serviceName":"my-service","imageTag":"v1.0.0",
        "triggeredBy":"dashboard"}'`;
@@ -606,6 +606,8 @@ export default function DeploymentDashboard({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-internal-api-key":
+            process.env.NEXT_PUBLIC_INTERNAL_API_KEY ?? "",
         },
         body: JSON.stringify({
           serviceName,

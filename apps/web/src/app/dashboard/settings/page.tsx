@@ -182,9 +182,9 @@ export default function SettingsPage() {
   const [applicationName, setApplicationName] = useState("ShipNexus");
   const [defaultEnvironment, setDefaultEnvironment] = useState("production");
   const [timezone, setTimezone] = useState("UTC");
-  const [webhookSecret, setWebhookSecret] = useState("shipnexus-webhook-secret");
-  const [showWebhookSecret, setShowWebhookSecret] = useState(false);
-  const [apiBaseUrl, setApiBaseUrl] = useState("http://localhost:3000");
+  const [apiBaseUrl, setApiBaseUrl] = useState(
+    process.env.NEXT_PUBLIC_API_URL ?? "",
+  );
   const [emailFailed, setEmailFailed] = useState(true);
   const [emailSuccessful, setEmailSuccessful] = useState(false);
   const [alertPending, setAlertPending] = useState(true);
@@ -246,18 +246,22 @@ export default function SettingsPage() {
         >
           <div className="grid gap-4 lg:grid-cols-2">
             <FieldLabel label="Webhook secret">
-              <div className="flex gap-2">
-                <TextInput
-                  type={showWebhookSecret ? "text" : "password"}
-                  value={webhookSecret}
-                  onChange={setWebhookSecret}
-                />
-                <SecondaryButton
-                  onClick={() => setShowWebhookSecret((current) => !current)}
-                >
-                  {showWebhookSecret ? "Hide" : "Show"}
-                </SecondaryButton>
-              </div>
+              <input
+                type="text"
+                value="••••••••••••••••"
+                readOnly
+                className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+                style={inputStyle}
+              />
+              <p
+                className="mt-2 text-sm leading-6"
+                style={{ color: theme.text.secondary }}
+              >
+                The webhook secret is configured via the GITHUB_WEBHOOK_SECRET
+                environment variable on the server and is never exposed to the
+                browser for security reasons. To rotate it, update the
+                environment variable and restart the API.
+              </p>
             </FieldLabel>
             <FieldLabel label="API base URL">
               <div className="flex gap-2">

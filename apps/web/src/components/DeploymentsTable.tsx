@@ -27,6 +27,8 @@ type DeploymentsResponse = {
 
 type StatusFilter = "all" | "pending" | "queued" | "running" | "success" | "failed";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const statusFilters: { label: string; value: StatusFilter }[] = [
   { label: "All", value: "all" },
   { label: "Pending", value: "pending" },
@@ -119,11 +121,9 @@ function EnvironmentBadge({ environment }: { environment: string }) {
 export default function DeploymentsTable({
   initialRows,
   initialTotal,
-  apiUrl,
 }: {
   initialRows: DeploymentTableRow[];
   initialTotal: number;
-  apiUrl: string;
 }) {
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
@@ -157,7 +157,7 @@ export default function DeploymentsTable({
     }
 
     try {
-      const response = await fetch(`${apiUrl}/deployments?${params.toString()}`);
+      const response = await fetch(`${API_URL}/deployments?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error(`Deployments API returned ${response.status}`);

@@ -6,7 +6,7 @@ import DeploymentsTable, {
 import type { DeploymentStatus } from "@/database/schema";
 import { theme } from "@/lib/dashboard-theme";
 
-const API_URL = process.env.API_URL ?? "http://localhost:3000";
+const API_URL = process.env.API_URL;
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ export default async function DeploymentsPage() {
           </section>
         ) : null}
 
-        <DeploymentsTable initialRows={rows} initialTotal={total} apiUrl={API_URL} />
+        <DeploymentsTable initialRows={rows} initialTotal={total} />
       </div>
     </DashboardShell>
   );

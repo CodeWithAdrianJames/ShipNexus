@@ -43,11 +43,37 @@ export class DeploymentsService {
     // a new job.id and bypasses dedup — callers should always provide it.
     const deduplicationId = job.webhookEventId ?? job.id;
 
-    await this.sqsService.publishDeploymentJob(
-      job.id,
-      job.serviceName,
-      deduplicationId,
-    );
+    // TODO: SQS publish failures have no automatic retry path. Guaranteed
+    // delivery requires a transactional outbox table and background publisher.
+    try {
+      await this.sqsService.publishDeploymentJob(
+        job.id,
+        job.serviceName,
+        deduplicationId,
+      );
+    } catch (error) {
+      const originalMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorMessage = `Failed to queue deployment: ${originalMessage}`;
+
+      this.logger.error(
+        `Failed to queue deployment job ${job.id}: ${originalMessage}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      const [failedJob] = await this.db
+        .update(deploymentJobs)
+        .set({
+          status: 'failed',
+          errorMessage,
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(deploymentJobs.id, job.id))
+        .returning();
+
+      return failedJob;
+    }
 
     return job;
   }

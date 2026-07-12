@@ -15,6 +15,7 @@ import { DeploymentsService } from './deployments.service';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { QueryDeploymentsDto } from './dto/query-deployments.dto';
 import { GithubWebhookGuard } from './guards/github-webhook.guard';
+import { InternalApiKeyGuard } from './guards/internal-api-key.guard';
 import { mapGithubWebhookToDeployment } from './github-webhook.mapper';
 
 @Controller('deployments')
@@ -23,6 +24,7 @@ export class DeploymentsController {
 
   @Post('trigger')
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(InternalApiKeyGuard)
   trigger(@Body() createDeploymentDto: CreateDeploymentDto) {
     return this.deploymentsService.create(createDeploymentDto);
   }

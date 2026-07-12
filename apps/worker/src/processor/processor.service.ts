@@ -203,9 +203,30 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         .returning({ id: deploymentJobs.id });
 
       if (queuedRows.length === 0) {
-        this.logger.warn(
+        const [currentJob] = await this.db
+          .select({ status: deploymentJobs.status })
+          .from(deploymentJobs)
+          .where(eq(deploymentJobs.id, jobId));
+
+        if (
+          currentJob?.status === 'queued' ||
+          currentJob?.status === 'running'
+        ) {
+          this.logger.warn(
+            `Job ${jobId} already in progress (${currentJob.status}) — ` +
+              `deleting duplicate message`,
+          );
+          await this.safeDeleteMessage(
+            message.ReceiptHandle!,
+            `already-in-progress:${jobId}`,
+          );
+          return;
+        }
+
+        this.logger.error(
           `Job ${jobId} transition pending→queued matched 0 rows — ` +
-            `status may have changed concurrently; skipping`,
+            `unexpected current status=${currentJob?.status ?? 'missing'}; ` +
+            `leaving message for retry`,
         );
         return;
       }
@@ -238,7 +259,10 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Job ${jobId} → running`);
 
       // --- 7. Trigger ECS deployment ---
-      await this.ecsService.triggerDeployment(job.serviceName);
+      await this.ecsService.triggerDeployment(
+        job.serviceName,
+        job.environment,
+      );
       const result = await this.ecsService.waitForStability(job.serviceName);
 
       this.logger.log(`ECS deployment result for job ${jobId}: ${result}`);
@@ -302,7 +326,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Job ${jobId} failed during processing`, err);
 
       // Fix 3: only mark failed if currently in running state
-      await this.db
+      const failedRows = await this.db
         .update(deploymentJobs)
         .set({
           status: 'failed',
@@ -315,7 +339,16 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
             eq(deploymentJobs.id, jobId),
             eq(deploymentJobs.status, 'running'),
           ),
+        )
+        .returning({ id: deploymentJobs.id });
+
+      if (failedRows.length === 0) {
+        this.logger.warn(
+          `Job ${jobId} transition running→failed matched 0 rows — ` +
+            `leaving message for retry`,
         );
+        return;
+      }
 
       this.logger.log(`Job ${jobId} → failed`);
       await this.safeDeleteMessage(

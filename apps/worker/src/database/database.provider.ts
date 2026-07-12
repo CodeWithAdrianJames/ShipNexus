@@ -10,7 +10,11 @@ export const databaseProvider = {
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
     const url = configService.getOrThrow<string>('DATABASE_URL');
-    const client = postgres(url);
+    const client = postgres(url, {
+      max: 10,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    });
     return drizzle(client, { schema });
   },
 };
