@@ -76,6 +76,31 @@ describe('SqsService.safeMessageGroupId', () => {
   });
 });
 
+describe('SqsService.safeDeduplicationId', () => {
+  let service: SqsService;
+
+  beforeEach(() => {
+    service = new SqsService(createConfig({ AWS_REGION: 'us-east-1' }));
+  });
+
+  it('returns short values unchanged', () => {
+    const value = 'github-delivery-123';
+    expect(service.safeDeduplicationId(value)).toBe(value);
+  });
+
+  it('returns a 64-character SHA-256 value for a 200-character input', () => {
+    const result = service.safeDeduplicationId('a'.repeat(200));
+    expect(result).toHaveLength(64);
+  });
+
+  it('is deterministic for the same long input', () => {
+    const value = 'x'.repeat(200);
+    expect(service.safeDeduplicationId(value)).toBe(
+      service.safeDeduplicationId(value),
+    );
+  });
+});
+
 describe('SqsService configuration', () => {
   it('does not require local AWS endpoint or static credentials in production', () => {
     const service = new SqsService(createConfig({ AWS_REGION: 'us-east-1' }));

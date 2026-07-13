@@ -60,7 +60,10 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         QueueName: this.configService.getOrThrow<string>('SQS_QUEUE_NAME'),
       }),
     );
-    this.queueUrl = response.QueueUrl!;
+    if (!response.QueueUrl) {
+      throw new Error('SQS GetQueueUrl returned no URL');
+    }
+    this.queueUrl = response.QueueUrl;
     this.logger.log(`Queue resolved: ${this.queueUrl}`);
     void this.poll();
   }
@@ -136,6 +139,11 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
     Body?: string;
     ReceiptHandle?: string;
   }): Promise<void> {
+    if (!message.ReceiptHandle) {
+      throw new Error('SQS message returned no receipt handle');
+    }
+    const receiptHandle = message.ReceiptHandle;
+
     // --- 1. Parse Claim Check ---
     let jobId: string;
     try {
@@ -144,7 +152,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       if (!jobId) throw new Error('Missing jobId in message body');
     } catch {
       this.logger.error('Malformed SQS message — deleting', message.Body);
-      await this.safeDeleteMessage(message.ReceiptHandle!, 'malformed-body');
+      await this.safeDeleteMessage(receiptHandle, 'malformed-body');
       return;
     }
 
@@ -164,7 +172,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       if (!job) {
         this.logger.error(`Job ${jobId} not found in DB — deleting message`);
         await this.safeDeleteMessage(
-          message.ReceiptHandle!,
+          receiptHandle,
           `job-not-found:${jobId}`,
         );
         return;
@@ -180,7 +188,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           `Job ${jobId} already terminal (${job.status}) — skipping`,
         );
         await this.safeDeleteMessage(
-          message.ReceiptHandle!,
+          receiptHandle,
           `already-terminal:${jobId}`,
         );
         return;
@@ -217,7 +225,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
               `deleting duplicate message`,
           );
           await this.safeDeleteMessage(
-            message.ReceiptHandle!,
+            receiptHandle,
             `already-in-progress:${jobId}`,
           );
           return;
@@ -294,7 +302,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         }
 
         await this.safeDeleteMessage(
-          message.ReceiptHandle!,
+          receiptHandle,
           `success:${jobId}`,
         );
       } else {
@@ -320,7 +328,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           );
 
         this.logger.error(`Job ${jobId} → failed (${result})`);
-        await this.safeDeleteMessage(message.ReceiptHandle!, `failed:${jobId}`);
+        await this.safeDeleteMessage(receiptHandle, `failed:${jobId}`);
       }
     } catch (err) {
       this.logger.error(`Job ${jobId} failed during processing`, err);
@@ -352,7 +360,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.log(`Job ${jobId} → failed`);
       await this.safeDeleteMessage(
-        message.ReceiptHandle!,
+        receiptHandle,
         `exception:${jobId}`,
       );
     } finally {

@@ -128,10 +128,11 @@ const PAGE_SIZE = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_STATUSES: DeploymentStatus[] = ["pending", "queued", "running"];
 const RETRY_SECONDS = 15;
-const EMPTY_DEPLOYMENT_CURL = `curl -X POST ${API_URL}/deployments \\
+const EMPTY_DEPLOYMENT_CURL = `curl -X POST http://localhost:3000/deployments/trigger \\
   -H "Content-Type: application/json" \\
+  -H "x-internal-api-key: YOUR_INTERNAL_API_KEY" \\
   -d '{"serviceName":"my-service","imageTag":"v1.0.0",
-       "triggeredBy":"dashboard"}'`;
+       "triggeredBy":"manual"}'`;
 
 type DeploymentsResponse = {
   data: DeploymentJob[];
@@ -1063,7 +1064,7 @@ export default function DeploymentDashboard({
                         No deployments yet
                       </p>
                       <p className="mt-1 text-sm leading-6 text-[#817a90]">
-                        Trigger one via POST /deployments
+                        Or use the Trigger Deployment button above.
                       </p>
                       <div className="mt-5 w-full max-w-2xl overflow-hidden rounded-lg border border-white/10 bg-[#0d0b18] text-left">
                         <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">

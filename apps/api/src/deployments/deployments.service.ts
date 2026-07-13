@@ -21,6 +21,27 @@ export class DeploymentsService {
   ) {}
 
   async create(dto: CreateDeploymentDto) {
+    if (dto.webhookEventId) {
+      const [existingJob] = await this.db
+        .select()
+        .from(deploymentJobs)
+        .where(eq(deploymentJobs.webhookEventId, dto.webhookEventId))
+        .limit(1);
+
+      if (existingJob) {
+        this.logger.log(
+          `Returning existing deployment job ${existingJob.id} for ` +
+            `webhookEventId ${dto.webhookEventId}`,
+        );
+        return existingJob;
+      }
+    } else {
+      this.logger.warn(
+        'Deployment created without webhookEventId — ' +
+          'duplicate webhook deliveries cannot be detected for this job.',
+      );
+    }
+
     const [job] = await this.db
       .insert(deploymentJobs)
       .values({

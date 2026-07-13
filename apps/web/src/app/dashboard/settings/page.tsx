@@ -1,5 +1,9 @@
 "use client";
 
+// TODO: Add PATCH /settings, persist settings in a settings table or
+// SSM-backed config, and add an authorized DELETE /deployments endpoint for
+// the danger zone action.
+
 import Link from "next/link";
 import { useState } from "react";
 import DashboardShell from "@/components/dashboard/DashboardShell";
@@ -17,10 +21,6 @@ const inputStyle = {
   border: theme.card.border,
   color: theme.text.primary,
 };
-
-function saveSettings() {
-  window.alert("Settings saved successfully");
-}
 
 function SectionCard({
   title,
@@ -112,14 +112,32 @@ function SelectInput({
 }
 
 function SaveButton() {
+  const [showNotice, setShowNotice] = useState(false);
+
   return (
-    <button
-      type="button"
-      className="rounded-lg bg-[#526dff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4059d4] focus:outline-none focus:ring-2 focus:ring-[#7890ff] focus:ring-offset-2 focus:ring-offset-[#1b172d]"
-      onClick={saveSettings}
-    >
-      Save
-    </button>
+    <div className="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        className="rounded-lg bg-[#526dff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4059d4] focus:outline-none focus:ring-2 focus:ring-[#7890ff] focus:ring-offset-2 focus:ring-offset-[#1b172d]"
+        onClick={() => setShowNotice(true)}
+      >
+        Save
+      </button>
+      {showNotice ? (
+        <p
+          role="status"
+          className="rounded-lg px-3 py-2 text-sm"
+          style={{
+            background: theme.status.pending.bg,
+            border: theme.status.pending.border,
+            color: theme.status.pending.text,
+          }}
+        >
+          Settings UI is not yet connected to a backend. Changes are not
+          persisted.
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -306,6 +324,11 @@ export default function SettingsPage() {
           <button
             type="button"
             className="rounded-lg px-4 py-2 text-sm font-semibold"
+            onClick={() =>
+              window.confirm(
+                "This feature is not yet implemented. No data will be deleted.",
+              )
+            }
             style={{
               background: theme.status.failed.bg,
               border: theme.status.failed.border,
