@@ -42,7 +42,10 @@ export class SqsService implements OnModuleInit {
       QueueName: this.queueName,
     });
     const response = await this.client.send(command);
-    this.queueUrl = response.QueueUrl!;
+    if (!response.QueueUrl) {
+      throw new Error('SQS GetQueueUrl returned no URL');
+    }
+    this.queueUrl = response.QueueUrl;
     this.logger.log(`SQS queue resolved: ${this.queueUrl}`);
   }
 
@@ -58,6 +61,11 @@ export class SqsService implements OnModuleInit {
     return createHash('sha256').update(serviceName).digest('hex');
   }
 
+  safeDeduplicationId(value: string): string {
+    if (value.length <= 128) return value;
+    return createHash('sha256').update(value).digest('hex');
+  }
+
   async publishDeploymentJob(
     jobId: string,
     serviceName: string,
@@ -67,7 +75,7 @@ export class SqsService implements OnModuleInit {
       QueueUrl: this.queueUrl,
       MessageBody: JSON.stringify({ jobId }),
       MessageGroupId: this.safeMessageGroupId(serviceName),
-      MessageDeduplicationId: deduplicationId,
+      MessageDeduplicationId: this.safeDeduplicationId(deduplicationId),
     });
 
     await this.client.send(command);

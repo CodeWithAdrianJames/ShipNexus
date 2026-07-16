@@ -57,51 +57,51 @@ type StatusTone = {
 const STATUS_TONES: Record<DeploymentStatus, StatusTone> = {
   pending: {
     label: "Pending",
-    dot: "bg-amber-400",
-    text: "text-amber-700",
-    bg: "bg-amber-50",
-    ring: "ring-amber-200",
-    chart: "#f59e0b",
+    dot: "bg-[#ffc66d]",
+    text: "text-[#ffc66d]",
+    bg: "bg-[#49371d]",
+    ring: "ring-[#6b512b]",
+    chart: "#ffc66d",
   },
   queued: {
     label: "Queued",
-    dot: "bg-sky-500",
-    text: "text-sky-700",
-    bg: "bg-sky-50",
-    ring: "ring-sky-200",
-    chart: "#0ea5e9",
+    dot: "bg-[#91a5ff]",
+    text: "text-[#91a5ff]",
+    bg: "bg-[#282d54]",
+    ring: "ring-[#3d4678]",
+    chart: "#7890ff",
   },
   running: {
     label: "Running",
-    dot: "bg-violet-500",
-    text: "text-violet-700",
-    bg: "bg-violet-50",
-    ring: "ring-violet-200",
-    chart: "#7c3aed",
+    dot: "bg-[#c89cff]",
+    text: "text-[#c89cff]",
+    bg: "bg-[#34204a]",
+    ring: "ring-[#50306e]",
+    chart: "#c89cff",
   },
   success: {
     label: "Successful",
-    dot: "bg-emerald-500",
-    text: "text-emerald-700",
-    bg: "bg-emerald-50",
-    ring: "ring-emerald-200",
-    chart: "#10b981",
+    dot: "bg-[#5ee0b1]",
+    text: "text-[#5ee0b1]",
+    bg: "bg-[#153a35]",
+    ring: "ring-[#245548]",
+    chart: "#5ee0b1",
   },
   failed: {
     label: "Failed",
-    dot: "bg-rose-500",
-    text: "text-rose-700",
-    bg: "bg-rose-50",
-    ring: "ring-rose-200",
-    chart: "#ef4444",
+    dot: "bg-[#ff78b7]",
+    text: "text-[#ff78b7]",
+    bg: "bg-[#47203a]",
+    ring: "ring-[#6b3056]",
+    chart: "#ff78b7",
   },
   cancelled: {
     label: "Cancelled",
-    dot: "bg-slate-400",
-    text: "text-slate-600",
-    bg: "bg-slate-100",
-    ring: "ring-slate-200",
-    chart: "#94a3b8",
+    dot: "bg-[#817a90]",
+    text: "text-[#aaa4b5]",
+    bg: "bg-white/5",
+    ring: "ring-white/10",
+    chart: "#817a90",
   },
 };
 
@@ -123,15 +123,16 @@ const STATUS_FILTERS = [
   { label: "Failed", value: "failed" },
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const PAGE_SIZE = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_STATUSES: DeploymentStatus[] = ["pending", "queued", "running"];
 const RETRY_SECONDS = 15;
-const EMPTY_DEPLOYMENT_CURL = `curl -X POST http://localhost:3000/deployments \\
+const EMPTY_DEPLOYMENT_CURL = `curl -X POST http://localhost:3000/deployments/trigger \\
   -H "Content-Type: application/json" \\
+  -H "x-internal-api-key: YOUR_INTERNAL_API_KEY" \\
   -d '{"serviceName":"my-service","imageTag":"v1.0.0",
-       "triggeredBy":"dashboard"}'`;
+       "triggeredBy":"manual"}'`;
 
 type DeploymentsResponse = {
   data: DeploymentJob[];
@@ -213,7 +214,7 @@ function statusGradient(
   byStatus: Record<DeploymentStatus, number>,
   total: number,
 ): string {
-  if (total === 0) return "conic-gradient(#e2e8f0 0deg 360deg)";
+  if (total === 0) return "conic-gradient(#332d46 0deg 360deg)";
 
   let cursor = 0;
   const segments = STATUS_ORDER.flatMap((status) => {
@@ -258,12 +259,12 @@ function MiniSparkline({ color, points }: { color: string; points: number[] }) {
 
 function EmptyChart() {
   return (
-    <div className="flex h-full min-h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-blue-200 bg-[#f8fbff] px-6 text-center">
-      <Activity className="h-6 w-6 text-blue-500" aria-hidden="true" />
-      <p className="mt-3 text-sm font-semibold text-slate-700">
+    <div className="flex h-full min-h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-[#3d4678] bg-[#151225] px-6 text-center">
+      <Activity className="h-6 w-6 text-[#7890ff]" aria-hidden="true" />
+      <p className="mt-3 text-sm font-semibold text-[#d4cfdd]">
         No chart activity yet
       </p>
-      <p className="mt-1 max-w-xs text-sm leading-6 text-slate-500">
+      <p className="mt-1 max-w-xs text-sm leading-6 text-[#817a90]">
         Deployment activity will appear here after jobs are created.
       </p>
     </div>
@@ -326,8 +327,8 @@ function LineChart({
         </desc>
         <defs>
           <linearGradient id="success-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.16" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            <stop offset="0%" stopColor="#5ee0b1" stopOpacity="0.16" />
+            <stop offset="100%" stopColor="#5ee0b1" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -340,14 +341,14 @@ function LineChart({
                 x2={width - padding.right}
                 y1={y}
                 y2={y}
-                stroke="#e2e8f0"
+                stroke="#332d46"
                 strokeDasharray="4 5"
               />
               <text
                 x={padding.left - 14}
                 y={y + 4}
                 textAnchor="end"
-                className="fill-slate-500 text-[12px]"
+                className="fill-[#817a90] text-[12px]"
               >
                 {tick}
               </text>
@@ -364,14 +365,14 @@ function LineChart({
                 x2={x}
                 y1={padding.top}
                 y2={padding.top + chartHeight}
-                stroke="#e2e8f0"
+                stroke="#2a253b"
                 strokeDasharray="3 6"
               />
               <text
                 x={x}
                 y={height - 16}
                 textAnchor="middle"
-                className="fill-slate-500 text-[12px]"
+                className="fill-[#817a90] text-[12px]"
               >
                 {day.label}
               </text>
@@ -388,7 +389,7 @@ function LineChart({
         <path
           d={pathFor("success")}
           fill="none"
-          stroke="#10b981"
+          stroke="#5ee0b1"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="3"
@@ -396,7 +397,7 @@ function LineChart({
         <path
           d={pathFor("failed")}
           fill="none"
-          stroke="#ef4444"
+          stroke="#ff78b7"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="3"
@@ -407,8 +408,8 @@ function LineChart({
           const failed = getPoint(day.failed, index);
           return (
             <g key={`${day.label}-points`}>
-              <circle cx={success.x} cy={success.y} fill="#10b981" r="4" />
-              <circle cx={failed.x} cy={failed.y} fill="#ef4444" r="4" />
+              <circle cx={success.x} cy={success.y} fill="#5ee0b1" r="4" />
+              <circle cx={failed.x} cy={failed.y} fill="#ff78b7" r="4" />
             </g>
           );
         })}
@@ -606,6 +607,8 @@ export default function DeploymentDashboard({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-internal-api-key":
+            process.env.NEXT_PUBLIC_INTERNAL_API_KEY ?? "",
         },
         body: JSON.stringify({
           serviceName,
@@ -743,9 +746,9 @@ export default function DeploymentDashboard({
       value: analytics.total,
       detail: "Last 50 records",
       icon: Database,
-      color: "#2563eb",
-      bg: "bg-blue-50",
-      tone: "text-blue-700",
+      color: "#7890ff",
+      bg: "bg-[#282d54]",
+      tone: "text-[#91a5ff]",
       points: analytics.daily.map((day) => day.total),
     },
     {
@@ -753,9 +756,9 @@ export default function DeploymentDashboard({
       value: analytics.activeCount,
       detail: trendCopy(analytics.activeCount, analytics.total, "in progress"),
       icon: CirclePlay,
-      color: "#7c3aed",
-      bg: "bg-violet-50",
-      tone: "text-violet-700",
+      color: "#c89cff",
+      bg: "bg-[#34204a]",
+      tone: "text-[#c89cff]",
       points: analytics.daily.map((day) => day.total),
     },
     {
@@ -763,9 +766,9 @@ export default function DeploymentDashboard({
       value: analytics.byStatus.success,
       detail: `${analytics.successRate}% success rate`,
       icon: CheckCircle2,
-      color: "#059669",
-      bg: "bg-emerald-50",
-      tone: "text-emerald-700",
+      color: "#5ee0b1",
+      bg: "bg-[#153a35]",
+      tone: "text-[#5ee0b1]",
       points: analytics.daily.map((day) => day.success),
     },
     {
@@ -773,9 +776,9 @@ export default function DeploymentDashboard({
       value: analytics.byStatus.failed,
       detail: `${analytics.failureRate}% failure rate`,
       icon: XCircle,
-      color: "#e11d48",
-      bg: "bg-rose-50",
-      tone: "text-rose-700",
+      color: "#ff78b7",
+      bg: "bg-[#47203a]",
+      tone: "text-[#ff78b7]",
       points: analytics.daily.map((day) => day.failed),
     },
   ];
@@ -797,14 +800,14 @@ export default function DeploymentDashboard({
             `}
           </style>
           <div
-            className="flex h-10 items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 text-xs font-medium text-slate-600 shadow-sm shadow-blue-950/5"
+            className="flex h-10 items-center gap-2 rounded-lg border border-white/10 bg-[#1b172d] px-3 text-xs font-medium text-[#aaa4b5]"
             aria-live="polite"
           >
-            <Clock3 className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            <Clock3 className="h-4 w-4 text-[#696276]" aria-hidden="true" />
             <span
               className={cx(
                 "h-2 w-2 rounded-full",
-                isPollingActive ? "bg-emerald-500" : "bg-slate-300",
+                isPollingActive ? "bg-[#5ee0b1]" : "bg-[#696276]",
               )}
               style={
                 isPollingActive
@@ -818,7 +821,7 @@ export default function DeploymentDashboard({
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-950/10 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#526dff] px-4 text-sm font-semibold text-white transition hover:bg-[#4059d4] focus:outline-none focus:ring-2 focus:ring-[#7890ff] focus:ring-offset-2 focus:ring-offset-[#171329]"
           >
             <CirclePlay className="h-4 w-4" aria-hidden="true" />
             Trigger Deployment
@@ -827,7 +830,7 @@ export default function DeploymentDashboard({
             type="button"
             onClick={handleManualRefresh}
             disabled={ticking}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm shadow-blue-950/5 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-[#1b172d] px-4 text-sm font-semibold text-[#f5f3f8] transition hover:border-white/20 hover:bg-white/5 hover:text-[#91a5ff] focus:outline-none focus:ring-2 focus:ring-[#526dff] focus:ring-offset-2 focus:ring-offset-[#171329] disabled:cursor-not-allowed disabled:opacity-60"
             aria-label="Refresh deployment data"
           >
             <RefreshCw
@@ -840,7 +843,7 @@ export default function DeploymentDashboard({
       }
     >
             <section
-              className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4"
+              className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
               aria-label="Deployment summary"
             >
               {summaryCards.map((card) => {
@@ -850,7 +853,7 @@ export default function DeploymentDashboard({
                     key={card.label}
                     className={cx(
                       PANEL_CLASS,
-                      "p-5 transition hover:border-blue-200 hover:shadow-md",
+                      "p-5 transition hover:border-white/20 hover:shadow-md",
                     )}
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -866,11 +869,11 @@ export default function DeploymentDashboard({
                       <MiniSparkline color={card.color} points={card.points} />
                     </div>
                     <div className="mt-5">
-                      <p className="text-xs font-semibold uppercase text-slate-500">
+                      <p className="text-xs font-semibold uppercase text-[#817a90]">
                         {card.label}
                       </p>
                       <div className="mt-2 flex min-h-12 flex-wrap items-end justify-between gap-3">
-                        <p className="text-3xl font-semibold tabular-nums text-slate-950 md:text-4xl">
+                        <p className="text-3xl font-semibold tabular-nums text-white md:text-4xl">
                           {card.value}
                         </p>
                         <p
@@ -895,11 +898,11 @@ export default function DeploymentDashboard({
                     <h2 className="text-base font-semibold">
                       Jobs Status Overview
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-[#817a90]">
                       Status mix across the current result set.
                     </p>
                   </div>
-                  <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
+                  <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#3d4678] bg-[#282d54] px-3 py-2 text-xs font-semibold text-[#91a5ff]">
                     <CalendarDays className="h-4 w-4" aria-hidden="true" />
                     Last 7 days
                   </div>
@@ -918,14 +921,14 @@ export default function DeploymentDashboard({
                       aria-hidden="true"
                     />
                     <div
-                      className="absolute inset-7 rounded-full bg-white shadow-inner"
+                      className="absolute inset-7 rounded-full bg-[#1b172d] shadow-inner"
                       aria-hidden="true"
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <p className="text-4xl font-semibold">
                         {analytics.total}
                       </p>
-                      <p className="mt-1 text-sm font-medium text-slate-500">
+                      <p className="mt-1 text-sm font-medium text-[#817a90]">
                         Total jobs
                       </p>
                     </div>
@@ -944,17 +947,17 @@ export default function DeploymentDashboard({
                                 tone.dot,
                               )}
                             />
-                            <span className="min-w-0 flex-1 text-sm font-medium text-slate-700">
+                            <span className="min-w-0 flex-1 text-sm font-medium text-[#d4cfdd]">
                               {tone.label}
                             </span>
-                            <span className="text-sm font-semibold text-slate-950">
+                            <span className="text-sm font-semibold text-white">
                               {count}
                             </span>
-                            <span className="w-12 text-right text-sm text-slate-500">
+                            <span className="w-12 text-right text-sm text-[#817a90]">
                               {percent(count, analytics.total)}%
                             </span>
                           </div>
-                          <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                             <div
                               className={cx("h-full rounded-full", tone.dot)}
                               style={{
@@ -975,17 +978,17 @@ export default function DeploymentDashboard({
                     <h2 className="text-base font-semibold">
                       Job Executions Over Time
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-[#817a90]">
                       Successful and failed deployments by day.
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+                  <div className="flex items-center gap-4 text-xs font-semibold text-[#aaa4b5]">
                     <span className="inline-flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="h-2 w-2 rounded-full bg-[#5ee0b1]" />
                       Success
                     </span>
                     <span className="inline-flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-rose-500" />
+                      <span className="h-2 w-2 rounded-full bg-[#ff78b7]" />
                       Failed
                     </span>
                   </div>
@@ -1011,20 +1014,20 @@ export default function DeploymentDashboard({
                     <h2 className="text-base font-semibold">
                       Recent Deployments
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-[#817a90]">
                       Showing {resultStart} to {resultEnd} of {totalJobs} results
                     </p>
                   </div>
-                  <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
+                  <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#3d4678] bg-[#282d54] px-3 py-2 text-xs font-semibold text-[#91a5ff]">
                     <Database
-                      className="h-4 w-4 text-slate-500"
+                      className="h-4 w-4 text-[#817a90]"
                       aria-hidden="true"
                     />
                     Live database view
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b border-slate-200 px-5 py-4">
+                <div className="flex flex-wrap gap-2 border-b border-white/10 px-5 py-4">
                   {STATUS_FILTERS.map((filter) => (
                     <button
                       key={filter.value}
@@ -1036,8 +1039,8 @@ export default function DeploymentDashboard({
                       className={cx(
                         "rounded-full px-3 py-1.5 text-xs font-semibold transition",
                         activeFilter === filter.value
-                          ? "bg-indigo-600 text-white"
-                          : "border border-slate-200 bg-transparent text-slate-600 hover:border-indigo-200 hover:text-indigo-700",
+                          ? "bg-[#526dff] text-white"
+                          : "border border-white/10 bg-transparent text-[#aaa4b5] hover:border-[#3d4678] hover:text-[#91a5ff]",
                       )}
                     >
                       {filter.label}
@@ -1046,7 +1049,7 @@ export default function DeploymentDashboard({
                 </div>
 
                 {fetchError ? (
-                  <div className="border-b border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-800">
+                  <div className="border-b border-[#6b3056] bg-[#47203a] px-5 py-3 text-sm font-semibold text-[#ff9fca]">
                     Could not reach the API. Retrying in {retryCountdown}s...
                   </div>
                 ) : null}
@@ -1054,39 +1057,39 @@ export default function DeploymentDashboard({
                 {jobs.length === 0 ? (
                   activeFilter === "all" ? (
                     <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-16 text-center">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-[#282d54] text-[#91a5ff] ring-1 ring-[#3d4678]">
                         <Server className="h-5 w-5" aria-hidden="true" />
                       </div>
-                      <p className="mt-4 text-base font-semibold text-slate-800">
+                      <p className="mt-4 text-base font-semibold text-[#ded9e3]">
                         No deployments yet
                       </p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">
-                        Trigger one via POST /deployments
+                      <p className="mt-1 text-sm leading-6 text-[#817a90]">
+                        Or use the Trigger Deployment button above.
                       </p>
-                      <div className="mt-5 w-full max-w-2xl overflow-hidden rounded-lg bg-slate-950 text-left shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2">
-                          <span className="text-xs font-semibold text-slate-400">
+                      <div className="mt-5 w-full max-w-2xl overflow-hidden rounded-lg border border-white/10 bg-[#0d0b18] text-left">
+                        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
+                          <span className="text-xs font-semibold text-[#696276]">
                             curl
                           </span>
                           <button
                             type="button"
                             onClick={handleCopyCurl}
-                            className="rounded-md border border-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:border-blue-400 hover:text-white"
+                            className="rounded-md border border-white/15 px-2.5 py-1 text-xs font-semibold text-[#d4cfdd] transition hover:border-[#7890ff] hover:text-white"
                           >
                             {copiedCurl ? "Copied" : "Copy"}
                           </button>
                         </div>
-                        <pre className="overflow-x-auto p-4 text-xs leading-6 text-slate-100">
+                        <pre className="overflow-x-auto p-4 text-xs leading-6 text-[#ded9e3]">
                           <code>{EMPTY_DEPLOYMENT_CURL}</code>
                         </pre>
                       </div>
                     </div>
                   ) : (
                     <div className="flex min-h-[320px] flex-col items-center justify-center px-6 py-16 text-center">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-[#282d54] text-[#91a5ff] ring-1 ring-[#3d4678]">
                         <Server className="h-5 w-5" aria-hidden="true" />
                       </div>
-                      <p className="mt-4 text-base font-semibold text-slate-800">
+                      <p className="mt-4 text-base font-semibold text-[#ded9e3]">
                         No {activeFilter} deployments found
                       </p>
                       <button
@@ -1095,7 +1098,7 @@ export default function DeploymentDashboard({
                           setActiveFilter("all");
                           setCurrentPage(1);
                         }}
-                        className="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        className="mt-4 rounded-lg border border-white/10 bg-[#1b172d] px-4 py-2 text-sm font-semibold text-[#d4cfdd] transition hover:border-white/20 hover:bg-white/5 hover:text-[#91a5ff]"
                       >
                         Clear filter
                       </button>
@@ -1114,7 +1117,7 @@ export default function DeploymentDashboard({
                         environment, status, duration, trigger, and creation
                         time.
                       </caption>
-                      <thead className="border-b border-slate-200 bg-[#f8fbff] text-xs font-semibold uppercase text-slate-500">
+                      <thead className="border-b border-white/10 bg-[#151225] text-xs font-semibold uppercase text-[#817a90]">
                         <tr>
                           <th scope="col" className="px-5 py-3 text-left">
                             Service
@@ -1142,15 +1145,15 @@ export default function DeploymentDashboard({
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-white/10">
                         {jobs.map((job) => (
                           <tr
                             key={job.id}
-                            className="transition hover:bg-blue-50/40"
+                            className="transition hover:bg-white/[0.035]"
                           >
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#282d54] text-[#91a5ff] ring-1 ring-[#3d4678]">
                                   <Server
                                     className="h-4 w-4"
                                     aria-hidden="true"
@@ -1158,7 +1161,7 @@ export default function DeploymentDashboard({
                                 </div>
                                 <Link
                                   href={`/dashboard/deployments/${job.id}`}
-                                  className="max-w-52 truncate font-semibold text-slate-900"
+                                  className="max-w-52 truncate font-semibold text-[#f5f3f8]"
                                   title={job.serviceName}
                                 >
                                   {job.serviceName}
@@ -1166,38 +1169,38 @@ export default function DeploymentDashboard({
                               </div>
                             </td>
                             <td
-                              className="px-5 py-4 font-mono text-xs text-slate-500"
+                              className="px-5 py-4 font-mono text-xs text-[#817a90]"
                               title={job.imageTag}
                             >
                               {shortImageTag(job.imageTag)}
                             </td>
                             <td className="px-5 py-4">
-                              <span className="inline-flex rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100">
+                              <span className="inline-flex rounded-md bg-[#282d54] px-2.5 py-1 text-xs font-semibold text-[#91a5ff] ring-1 ring-[#3d4678]">
                                 {job.environment}
                               </span>
                             </td>
                             <td className="px-5 py-4">
                               <StatusBadge status={job.status} />
                             </td>
-                            <td className="px-5 py-4 text-slate-600">
+                            <td className="px-5 py-4 text-[#aaa4b5]">
                               <span className="inline-flex items-center gap-1.5 font-mono text-xs">
                                 <TimerReset
-                                  className="h-3.5 w-3.5 text-slate-400"
+                                  className="h-3.5 w-3.5 text-[#696276]"
                                   aria-hidden="true"
                                 />
                                 {duration(job.startedAt, job.completedAt)}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-slate-600">
+                            <td className="px-5 py-4 text-[#aaa4b5]">
                               <span className="inline-flex items-center gap-2">
                                 <Webhook
-                                  className="h-4 w-4 text-slate-700"
+                                  className="h-4 w-4 text-[#d4cfdd]"
                                   aria-hidden="true"
                                 />
                                 {job.triggeredBy}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-slate-500">
+                            <td className="px-5 py-4 text-[#817a90]">
                               {formatDate(job.createdAt)}
                             </td>
                             <td className="px-5 py-4 text-right">
@@ -1221,7 +1224,7 @@ export default function DeploymentDashboard({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4 text-sm text-slate-600">
+                <div className="flex items-center justify-between border-t border-white/10 px-5 py-4 text-sm text-[#aaa4b5]">
                   <span>
                     Page {currentPage} of {totalPages}
                   </span>
@@ -1232,7 +1235,7 @@ export default function DeploymentDashboard({
                         setCurrentPage((value) => Math.max(value - 1, 1))
                       }
                       disabled={currentPage <= 1 || isLoading}
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg border border-white/10 bg-[#1b172d] px-3 py-2 text-sm font-semibold text-[#d4cfdd] transition hover:border-white/20 hover:bg-white/5 hover:text-[#91a5ff] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Prev
                     </button>
@@ -1244,7 +1247,7 @@ export default function DeploymentDashboard({
                         )
                       }
                       disabled={currentPage >= totalPages || isLoading}
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg border border-white/10 bg-[#1b172d] px-3 py-2 text-sm font-semibold text-[#d4cfdd] transition hover:border-white/20 hover:bg-white/5 hover:text-[#91a5ff] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Next
                     </button>
@@ -1259,49 +1262,49 @@ export default function DeploymentDashboard({
                       <h2 className="text-base font-semibold">
                         Operational Health
                       </h2>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm text-[#817a90]">
                         Live rollout indicators.
                       </p>
                     </div>
                     <ShieldCheck
-                      className="h-5 w-5 text-emerald-600"
+                      className="h-5 w-5 text-[#5ee0b1]"
                       aria-hidden="true"
                     />
                   </div>
 
-                  <div className="mt-5 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-[#f8fbff]">
+                  <div className="mt-5 divide-y divide-white/10 rounded-lg border border-white/10 bg-[#151225]">
                     <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-sm font-medium text-slate-600">
+                      <span className="text-sm font-medium text-[#aaa4b5]">
                         Primary environment
                       </span>
                       <span
-                        className="max-w-32 truncate text-sm font-semibold text-slate-950"
+                        className="max-w-32 truncate text-sm font-semibold text-white"
                         title={analytics.topEnvironment}
                       >
                         {analytics.topEnvironment}
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-sm font-medium text-slate-600">
+                      <span className="text-sm font-medium text-[#aaa4b5]">
                         Average duration
                       </span>
-                      <span className="text-sm font-semibold text-slate-950">
+                      <span className="text-sm font-semibold text-white">
                         {analytics.avgDuration}
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-sm font-medium text-slate-600">
+                      <span className="text-sm font-medium text-[#aaa4b5]">
                         Refresh cadence
                       </span>
-                      <span className="text-sm font-semibold text-slate-950">
+                      <span className="text-sm font-semibold text-white">
                         10s
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-sm font-medium text-slate-600">
+                      <span className="text-sm font-medium text-[#aaa4b5]">
                         Latest job
                       </span>
-                      <span className="max-w-32 truncate text-sm font-semibold text-slate-950">
+                      <span className="max-w-32 truncate text-sm font-semibold text-white">
                         {analytics.latestJob?.serviceName ?? "-"}
                       </span>
                     </div>
@@ -1314,43 +1317,43 @@ export default function DeploymentDashboard({
                       <h2 className="text-base font-semibold">
                         Pipeline Signals
                       </h2>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm text-[#817a90]">
                         Current stability read.
                       </p>
                     </div>
                     <Activity
-                      className="h-5 w-5 text-blue-600"
+                      className="h-5 w-5 text-[#7890ff]"
                       aria-hidden="true"
                     />
                   </div>
 
                   <div className="mt-5 space-y-4">
-                    <div className="flex items-start gap-3 rounded-lg bg-emerald-50/60 p-3 ring-1 ring-emerald-100">
-                      <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                    <div className="flex items-start gap-3 rounded-lg bg-[#153a35] p-3 ring-1 ring-[#245548]">
+                      <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#153a35] text-[#5ee0b1]">
                         <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-[#f5f3f8]">
                           {analytics.successRate}% success rate
                         </p>
-                        <p className="mt-1 text-sm leading-5 text-slate-500">
+                        <p className="mt-1 text-sm leading-5 text-[#817a90]">
                           {analytics.byStatus.success} successful deployment
                           {analytics.byStatus.success === 1 ? "" : "s"} in view.
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-lg bg-rose-50/60 p-3 ring-1 ring-rose-100">
-                      <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
+                    <div className="flex items-start gap-3 rounded-lg bg-[#47203a] p-3 ring-1 ring-[#6b3056]">
+                      <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#47203a] text-[#ff78b7]">
                         <ArrowDownRight
                           className="h-4 w-4"
                           aria-hidden="true"
                         />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-[#f5f3f8]">
                           {analytics.failureRate}% failure rate
                         </p>
-                        <p className="mt-1 text-sm leading-5 text-slate-500">
+                        <p className="mt-1 text-sm leading-5 text-[#817a90]">
                           {analytics.byStatus.failed} failed deployment
                           {analytics.byStatus.failed === 1 ? "" : "s"} currently
                           visible.
@@ -1365,7 +1368,7 @@ export default function DeploymentDashboard({
 
     {isModalOpen ? (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[#080611]/75 px-4 py-6"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) {
             closeModal();
@@ -1377,23 +1380,23 @@ export default function DeploymentDashboard({
           role="dialog"
           aria-modal="true"
           aria-labelledby="trigger-deployment-title"
-          className="w-full max-w-lg rounded-lg bg-white shadow-xl shadow-slate-950/20"
+          className="w-full max-w-lg rounded-lg border border-white/10 bg-[#1b172d] shadow-[0_24px_80px_rgba(4,3,16,0.55)]"
         >
-          <div className="border-b border-slate-200 px-6 py-5">
+          <div className="border-b border-white/10 px-6 py-5">
             <h2
               id="trigger-deployment-title"
-              className="text-lg font-semibold text-slate-950"
+              className="text-lg font-semibold text-white"
             >
               Trigger Deployment
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[#817a90]">
               Create a deployment job from the dashboard.
             </p>
           </div>
 
           <form onSubmit={handleTriggerSubmit} className="space-y-4 px-6 py-5">
             {triggerApiError ? (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">
+              <div className="rounded-lg border border-[#6b3056] bg-[#47203a] px-3 py-2 text-sm font-semibold text-[#ff9fca]">
                 {triggerApiError}
               </div>
             ) : null}
@@ -1401,7 +1404,7 @@ export default function DeploymentDashboard({
             <div>
               <label
                 htmlFor="trigger-service-name"
-                className="text-sm font-semibold text-slate-700"
+                className="text-sm font-semibold text-[#d4cfdd]"
               >
                 Service name
               </label>
@@ -1418,10 +1421,10 @@ export default function DeploymentDashboard({
                     serviceName: event.target.value,
                   }))
                 }
-                className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-950 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-[#151225] px-3 text-sm text-white outline-none transition placeholder:text-[#696276] focus:border-[#7890ff] focus:ring-2 focus:ring-[#526dff]/20"
               />
               {triggerErrors.serviceName ? (
-                <p className="mt-1 text-sm font-medium text-rose-700">
+                <p className="mt-1 text-sm font-medium text-[#ff78b7]">
                   {triggerErrors.serviceName}
                 </p>
               ) : null}
@@ -1430,7 +1433,7 @@ export default function DeploymentDashboard({
             <div>
               <label
                 htmlFor="trigger-image-tag"
-                className="text-sm font-semibold text-slate-700"
+                className="text-sm font-semibold text-[#d4cfdd]"
               >
                 Image tag
               </label>
@@ -1446,10 +1449,10 @@ export default function DeploymentDashboard({
                     imageTag: event.target.value,
                   }))
                 }
-                className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-950 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-[#151225] px-3 text-sm text-white outline-none transition placeholder:text-[#696276] focus:border-[#7890ff] focus:ring-2 focus:ring-[#526dff]/20"
               />
               {triggerErrors.imageTag ? (
-                <p className="mt-1 text-sm font-medium text-rose-700">
+                <p className="mt-1 text-sm font-medium text-[#ff78b7]">
                   {triggerErrors.imageTag}
                 </p>
               ) : null}
@@ -1458,7 +1461,7 @@ export default function DeploymentDashboard({
             <div>
               <label
                 htmlFor="trigger-environment"
-                className="text-sm font-semibold text-slate-700"
+                className="text-sm font-semibold text-[#d4cfdd]"
               >
                 Environment
               </label>
@@ -1471,7 +1474,7 @@ export default function DeploymentDashboard({
                     environment: event.target.value,
                   }))
                 }
-                className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-[#151225] px-3 text-sm text-white outline-none transition focus:border-[#7890ff] focus:ring-2 focus:ring-[#526dff]/20"
               >
                 <option value="production">production</option>
                 <option value="staging">staging</option>
@@ -1482,7 +1485,7 @@ export default function DeploymentDashboard({
             <div>
               <label
                 htmlFor="trigger-triggered-by"
-                className="text-sm font-semibold text-slate-700"
+                className="text-sm font-semibold text-[#d4cfdd]"
               >
                 Triggered by
               </label>
@@ -1496,10 +1499,10 @@ export default function DeploymentDashboard({
                     triggeredBy: event.target.value,
                   }))
                 }
-                className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-950 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-[#151225] px-3 text-sm text-white outline-none transition placeholder:text-[#696276] focus:border-[#7890ff] focus:ring-2 focus:ring-[#526dff]/20"
               />
               {triggerErrors.triggeredBy ? (
-                <p className="mt-1 text-sm font-medium text-rose-700">
+                <p className="mt-1 text-sm font-medium text-[#ff78b7]">
                   {triggerErrors.triggeredBy}
                 </p>
               ) : null}
@@ -1509,14 +1512,14 @@ export default function DeploymentDashboard({
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-white/10 bg-[#1b172d] px-4 py-2 text-sm font-semibold text-[#d4cfdd] transition hover:bg-white/5"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isTriggerSubmitting}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-[#526dff] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4059d4] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isTriggerSubmitting ? "Triggering..." : "Trigger Deployment"}
               </button>
@@ -1527,7 +1530,7 @@ export default function DeploymentDashboard({
     ) : null}
 
     {toastMessage ? (
-      <div className="fixed bottom-5 right-5 z-50 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20">
+      <div className="fixed bottom-5 right-5 z-50 rounded-lg border border-[#245548] bg-[#153a35] px-4 py-3 text-sm font-semibold text-[#5ee0b1] shadow-[0_18px_45px_rgba(4,3,16,0.32)]">
         {toastMessage}
       </div>
     ) : null}

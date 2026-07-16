@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 import type { DeploymentJob } from "@/database/schema";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3000";
@@ -33,9 +34,9 @@ function duration(start: Date | string | null, end: Date | string | null) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid gap-1 border-b border-slate-100 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6">
-      <dt className="text-sm font-medium text-slate-500">{label}</dt>
-      <dd className="break-words text-sm font-semibold text-slate-950">
+    <div className="grid gap-1 border-b border-white/10 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6">
+      <dt className="text-sm font-medium text-[#817a90]">{label}</dt>
+      <dd className="break-words text-sm font-semibold text-[#f8f7fb]">
         {value}
       </dd>
     </div>
@@ -60,29 +61,28 @@ export default async function DeploymentDetailPage({ params }: PageProps) {
   const payload = JSON.stringify(job.payload ?? null, null, 2);
 
   return (
-    <main className="min-h-screen bg-[#f6f8fc] px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+    <DashboardShell
+      title="Deployment Job"
+      description={job.id}
+      issueCount={job.status === "failed" ? 1 : 0}
+      actions={<StatusBadge status={job.status} />}
+    >
+      <div className="mx-auto w-full max-w-5xl">
         <Link
           href="/dashboard"
-          className="text-sm font-semibold text-blue-700 transition hover:text-blue-900"
+          className="text-sm font-semibold text-[#91a5ff] transition hover:text-white focus:outline-none focus:ring-2 focus:ring-[#526dff]"
         >
           ← Back to Dashboard
         </Link>
 
-        <section className="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm shadow-blue-950/5">
-          <header className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">
-                Deployment Job
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-                {job.serviceName}
-              </h1>
-              <p className="mt-2 break-all font-mono text-xs text-slate-500">
-                {job.id}
-              </p>
-            </div>
-            <StatusBadge status={job.status} />
+        <section className="mt-5 overflow-hidden rounded-lg border border-white/10 bg-[#1b172d] shadow-[0_18px_45px_rgba(4,3,16,0.16)]">
+          <header className="border-b border-white/10 px-6 py-5">
+            <p className="text-xs font-semibold uppercase text-[#817a90]">
+              Service name
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-white">
+              {job.serviceName}
+            </h2>
           </header>
 
           <dl className="px-6">
@@ -102,24 +102,24 @@ export default async function DeploymentDetailPage({ params }: PageProps) {
           </dl>
 
           {job.status === "failed" && job.errorMessage ? (
-            <section className="mx-6 mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4">
-              <h2 className="text-sm font-semibold text-rose-900">
+            <section className="mx-6 mt-6 rounded-lg border border-[#6b3056] bg-[#47203a] p-4">
+              <h2 className="text-sm font-semibold text-[#ff9fca]">
                 Error message
               </h2>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-rose-800">
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#f5bad5]">
                 {job.errorMessage}
               </p>
             </section>
           ) : null}
 
           <section className="p-6">
-            <h2 className="text-sm font-semibold text-slate-900">Payload</h2>
-            <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm leading-6 text-slate-100">
+            <h2 className="text-sm font-semibold text-[#f8f7fb]">Payload</h2>
+            <pre className="mt-3 overflow-x-auto rounded-lg border border-white/10 bg-[#0d0b18] p-4 text-sm leading-6 text-[#ded9e3]">
               <code>{payload}</code>
             </pre>
           </section>
         </section>
       </div>
-    </main>
+    </DashboardShell>
   );
 }

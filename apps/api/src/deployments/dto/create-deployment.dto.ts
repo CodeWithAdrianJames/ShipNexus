@@ -2,6 +2,7 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  IsObject,
   MaxLength,
   IsIn,
 } from 'class-validator';
@@ -33,5 +34,6 @@ export class CreateDeploymentDto {
   webhookEventId?: string;
 
   @IsOptional()
+  @IsObject()
   payload?: Record<string, unknown>;
 }

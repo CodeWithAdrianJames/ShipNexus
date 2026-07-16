@@ -2,6 +2,7 @@
 
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 
 export default function Error({
   error,
@@ -15,36 +16,43 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f6f8fc] px-4 py-10 text-slate-950">
+    <DashboardShell
+      title="Dashboard unavailable"
+      description="Deployment data could not be loaded. Check the deployments API request path, API service health, and configured API URL, then try again."
+      issueCount={1}
+    >
       <section
-        className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm shadow-slate-200/60"
+        className="mx-auto w-full max-w-lg rounded-lg border border-white/10 bg-[#1b172d] p-6 text-center shadow-[0_18px_45px_rgba(4,3,16,0.16)]"
         aria-labelledby="dashboard-error-title"
       >
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-rose-50 text-rose-700 ring-1 ring-rose-100">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-[#47203a] text-[#ff78b7] ring-1 ring-[#6b3056]">
           <AlertTriangle className="h-5 w-5" aria-hidden="true" />
         </div>
-        <h1 id="dashboard-error-title" className="mt-4 text-lg font-semibold">
+        <h2
+          id="dashboard-error-title"
+          className="mt-4 text-lg font-semibold text-white"
+        >
           Dashboard unavailable
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[#aaa4b5]">
           Deployment data could not be loaded. Check the deployments API
           request path, API service health, and configured API URL, then try
           again.
         </p>
         {error.digest ? (
-          <p className="mt-3 font-mono text-xs text-slate-500">
+          <p className="mt-3 font-mono text-xs text-[#817a90]">
             Error reference: {error.digest}
           </p>
         ) : null}
         <button
           type="button"
           onClick={reset}
-          className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#526dff] px-4 text-sm font-semibold text-white transition hover:bg-[#4059d4] focus:outline-none focus:ring-2 focus:ring-[#7890ff] focus:ring-offset-2 focus:ring-offset-[#1b172d]"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
           Retry
         </button>
       </section>
-    </main>
+    </DashboardShell>
   );
 }

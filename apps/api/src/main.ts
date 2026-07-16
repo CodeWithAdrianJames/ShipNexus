@@ -1,7 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+
+const logger = new Logger('Bootstrap');
 
 function getCorsOrigins() {
   return (
@@ -31,6 +34,9 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // TODO: Configure an application-specific CSP before production launch.
+  app.use(helmet());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -40,6 +46,14 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  await app.listen(3000, '0.0.0.0');
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  await app.listen(port, '0.0.0.0');
 }
-void bootstrap();
+
+bootstrap().catch((err: unknown) => {
+  logger.error(
+    'API failed to start',
+    err instanceof Error ? err.stack : String(err),
+  );
+  process.exit(1);
+});

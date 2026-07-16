@@ -6,6 +6,12 @@ import {
   DescribeServicesCommand,
 } from '@aws-sdk/client-ecs';
 
+const RECOGNIZED_ENVIRONMENTS = new Set([
+  'development',
+  'staging',
+  'production',
+]);
+
 export type DeploymentResult = 'success' | 'failed' | 'timeout';
 
 @Injectable()
@@ -72,7 +78,21 @@ export class EcsService {
     );
   }
 
-  async triggerDeployment(serviceName: string): Promise<void> {
+  async triggerDeployment(
+    serviceName: string,
+    environment: string,
+  ): Promise<void> {
+    const clusterName = RECOGNIZED_ENVIRONMENTS.has(environment)
+      ? `shipnexus-${environment}-cluster`
+      : this.clusterName;
+
+    // TODO: Deploying a specific image tag requires registering a new task
+    // definition revision with that image before updating the ECS service.
+    this.logger.warn(
+      'forceNewDeployment restarts the CURRENT task definition — ' +
+        'it does not deploy job.imageTag directly. See TODO for task definition versioning.',
+    );
+
     if (this.dryRun) {
       this.logger.warn(
         `[DRY-RUN] Skipping UpdateService for ${serviceName} — ` +
@@ -82,12 +102,12 @@ export class EcsService {
     }
 
     this.logger.log(
-      `Triggering ECS deployment: cluster=${this.clusterName} service=${serviceName}`,
+      `Triggering ECS deployment: cluster=${clusterName} service=${serviceName}`,
     );
 
     await this.client.send(
       new UpdateServiceCommand({
-        cluster: this.clusterName,
+        cluster: clusterName,
         service: serviceName,
         forceNewDeployment: true,
       }),

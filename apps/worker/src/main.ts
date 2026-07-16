@@ -1,3 +1,5 @@
+// TODO: Define worker health via a heartbeat (for example, in Redis); this
+// process has no HTTP server for an endpoint-based health check.
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';

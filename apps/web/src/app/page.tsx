@@ -1,5 +1,9 @@
-import LandingPage from "@/components/LandingPage";
+import { db }                  from '@/database/db';
+import { deploymentJobs }      from '@/database/schema';
+import { desc }                from 'drizzle-orm';
+import DeploymentDashboard     from '@/components/DeploymentDashboard';
 
-export default function HomePage() {
-  return <LandingPage />;
-}
+// Never cache this page — always fetch live data from Postgres
+export const dynamic = 'force-dynamic';
+
+

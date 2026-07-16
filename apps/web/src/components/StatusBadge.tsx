@@ -1,21 +1,21 @@
 import type { DeploymentStatus } from '@/database/schema';
 
 const STYLES: Record<DeploymentStatus, string> = {
-  pending:   'bg-amber-50 text-amber-700 ring-amber-200',
-  queued:    'bg-sky-50 text-sky-700 ring-sky-200',
-  running:   'bg-violet-50 text-violet-700 ring-violet-200',
-  success:   'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  failed:    'bg-rose-50 text-rose-700 ring-rose-200',
-  cancelled: 'bg-slate-100 text-slate-600 ring-slate-200',
+  pending:   'bg-[#49371d] text-[#ffc66d] ring-[#6b512b]',
+  queued:    'bg-[#282d54] text-[#91a5ff] ring-[#3d4678]',
+  running:   'bg-[#34204a] text-[#c89cff] ring-[#50306e]',
+  success:   'bg-[#153a35] text-[#5ee0b1] ring-[#245548]',
+  failed:    'bg-[#47203a] text-[#ff78b7] ring-[#6b3056]',
+  cancelled: 'bg-[#211c31] text-[#aaa4b5] ring-white/10',
 };
 
 const DOTS: Record<DeploymentStatus, string> = {
-  pending:   'bg-amber-400',
-  queued:    'bg-sky-500',
-  running:   'bg-violet-500 animate-pulse',
-  success:   'bg-emerald-500',
-  failed:    'bg-rose-500',
-  cancelled: 'bg-slate-400',
+  pending:   'bg-[#ffc66d]',
+  queued:    'bg-[#91a5ff]',
+  running:   'bg-[#c89cff] animate-pulse',
+  success:   'bg-[#5ee0b1]',
+  failed:    'bg-[#ff78b7]',
+  cancelled: 'bg-[#817a90]',
 };
 
 export default function StatusBadge({ status }: { status: DeploymentStatus }) {

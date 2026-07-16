@@ -60,7 +60,10 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         QueueName: this.configService.getOrThrow<string>('SQS_QUEUE_NAME'),
       }),
     );
-    this.queueUrl = response.QueueUrl!;
+    if (!response.QueueUrl) {
+      throw new Error('SQS GetQueueUrl returned no URL');
+    }
+    this.queueUrl = response.QueueUrl;
     this.logger.log(`Queue resolved: ${this.queueUrl}`);
     void this.poll();
   }
@@ -136,6 +139,11 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
     Body?: string;
     ReceiptHandle?: string;
   }): Promise<void> {
+    if (!message.ReceiptHandle) {
+      throw new Error('SQS message returned no receipt handle');
+    }
+    const receiptHandle = message.ReceiptHandle;
+
     // --- 1. Parse Claim Check ---
     let jobId: string;
     try {
@@ -144,7 +152,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       if (!jobId) throw new Error('Missing jobId in message body');
     } catch {
       this.logger.error('Malformed SQS message — deleting', message.Body);
-      await this.safeDeleteMessage(message.ReceiptHandle!, 'malformed-body');
+      await this.safeDeleteMessage(receiptHandle, 'malformed-body');
       return;
     }
 
@@ -164,7 +172,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       if (!job) {
         this.logger.error(`Job ${jobId} not found in DB — deleting message`);
         await this.safeDeleteMessage(
-          message.ReceiptHandle!,
+          receiptHandle,
           `job-not-found:${jobId}`,
         );
         return;
@@ -180,7 +188,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           `Job ${jobId} already terminal (${job.status}) — skipping`,
         );
         await this.safeDeleteMessage(
-          message.ReceiptHandle!,
+          receiptHandle,
           `already-terminal:${jobId}`,
         );
         return;
@@ -203,9 +211,30 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         .returning({ id: deploymentJobs.id });
 
       if (queuedRows.length === 0) {
-        this.logger.warn(
+        const [currentJob] = await this.db
+          .select({ status: deploymentJobs.status })
+          .from(deploymentJobs)
+          .where(eq(deploymentJobs.id, jobId));
+
+        if (
+          currentJob?.status === 'queued' ||
+          currentJob?.status === 'running'
+        ) {
+          this.logger.warn(
+            `Job ${jobId} already in progress (${currentJob.status}) — ` +
+              `deleting duplicate message`,
+          );
+          await this.safeDeleteMessage(
+            receiptHandle,
+            `already-in-progress:${jobId}`,
+          );
+          return;
+        }
+
+        this.logger.error(
           `Job ${jobId} transition pending→queued matched 0 rows — ` +
-            `status may have changed concurrently; skipping`,
+            `unexpected current status=${currentJob?.status ?? 'missing'}; ` +
+            `leaving message for retry`,
         );
         return;
       }
@@ -238,7 +267,10 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Job ${jobId} → running`);
 
       // --- 7. Trigger ECS deployment ---
-      await this.ecsService.triggerDeployment(job.serviceName);
+      await this.ecsService.triggerDeployment(
+        job.serviceName,
+        job.environment,
+      );
       const result = await this.ecsService.waitForStability(job.serviceName);
 
       this.logger.log(`ECS deployment result for job ${jobId}: ${result}`);
@@ -270,7 +302,7 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
         }
 
         await this.safeDeleteMessage(
-          message.ReceiptHandle!,
+          receiptHandle,
           `success:${jobId}`,
         );
       } else {
@@ -296,13 +328,13 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
           );
 
         this.logger.error(`Job ${jobId} → failed (${result})`);
-        await this.safeDeleteMessage(message.ReceiptHandle!, `failed:${jobId}`);
+        await this.safeDeleteMessage(receiptHandle, `failed:${jobId}`);
       }
     } catch (err) {
       this.logger.error(`Job ${jobId} failed during processing`, err);
 
       // Fix 3: only mark failed if currently in running state
-      await this.db
+      const failedRows = await this.db
         .update(deploymentJobs)
         .set({
           status: 'failed',
@@ -315,11 +347,20 @@ export class ProcessorService implements OnModuleInit, OnModuleDestroy {
             eq(deploymentJobs.id, jobId),
             eq(deploymentJobs.status, 'running'),
           ),
+        )
+        .returning({ id: deploymentJobs.id });
+
+      if (failedRows.length === 0) {
+        this.logger.warn(
+          `Job ${jobId} transition running→failed matched 0 rows — ` +
+            `leaving message for retry`,
         );
+        return;
+      }
 
       this.logger.log(`Job ${jobId} → failed`);
       await this.safeDeleteMessage(
-        message.ReceiptHandle!,
+        receiptHandle,
         `exception:${jobId}`,
       );
     } finally {

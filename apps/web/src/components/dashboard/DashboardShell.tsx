@@ -61,10 +61,10 @@ function NavLink({
         href={item.href}
         aria-current={active ? "page" : undefined}
         className={cx(
-          "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+          "inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#526dff] focus:ring-offset-2 focus:ring-offset-[#171329]",
           active
-            ? "bg-blue-700 text-white shadow-sm shadow-blue-200"
-            : "border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700",
+            ? "bg-[#526dff] text-white"
+            : "border border-white/10 bg-[#1b172d] text-[#aaa4b5] hover:border-white/20 hover:bg-white/5 hover:text-white",
         )}
       >
         <Icon className="h-3.5 w-3.5" aria-hidden={true} />
@@ -78,10 +78,10 @@ function NavLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cx(
-        "flex h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+        "flex h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-[#526dff] focus:ring-offset-2 focus:ring-offset-[#100d1c]",
         active
-          ? "bg-blue-700 text-white shadow-sm shadow-blue-200"
-          : "text-slate-600 hover:bg-blue-50 hover:text-blue-700",
+          ? "bg-[#526dff] text-white"
+          : "text-[#aaa4b5] hover:bg-white/5 hover:text-white",
       )}
     >
       <Icon className="h-4.5 w-4.5" aria-hidden={true} />
@@ -104,19 +104,23 @@ export default function DashboardShell({
   issueCount?: number;
 }) {
   return (
-    <div className="min-h-screen bg-[#f8fbff] text-slate-950">
+    <div className="relative min-h-screen bg-[#171329] text-white">
+      <div className="fixed inset-x-0 top-0 z-50 flex h-1" aria-hidden="true">
+        <span className="w-1/2 bg-[#526dff]" />
+        <span className="w-1/2 bg-[#ef5aa5]" />
+      </div>
       <div className="flex min-h-screen">
-        <aside className="hidden w-[272px] shrink-0 border-r border-slate-200/80 bg-white px-4 py-5 shadow-sm shadow-blue-950/5 lg:flex lg:flex-col">
+        <aside className="hidden w-[260px] shrink-0 border-r border-white/10 bg-[#100d1c] px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:self-start lg:flex-col lg:overflow-y-auto">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-lg px-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="flex items-center gap-3 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-[#526dff] focus:ring-offset-2 focus:ring-offset-[#100d1c]"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-700 text-white shadow-sm shadow-blue-200">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#526dff] text-white">
               <Rocket className="h-5 w-5" aria-hidden={true} />
             </div>
             <div>
               <p className="text-xl font-semibold">ShipNexus</p>
-              <p className="text-sm text-slate-500">Deployment Pipeline</p>
+              <p className="text-sm text-[#817a90]">Deployment Pipeline</p>
             </div>
           </Link>
 
@@ -131,17 +135,17 @@ export default function DashboardShell({
               className={cx(
                 "rounded-lg border p-4",
                 issueCount > 0
-                  ? "border-rose-200 bg-rose-50"
-                  : "border-emerald-200 bg-emerald-50",
+                  ? "border-[#6b3056] bg-[#25162a]"
+                  : "border-[#245548] bg-[#122a29]",
               )}
             >
               <div className="flex items-start gap-3">
                 <div
                   className={cx(
-                    "flex h-9 w-9 items-center justify-center rounded-lg bg-white ring-1",
+                    "flex h-9 w-9 items-center justify-center rounded-md bg-[#171329] ring-1",
                     issueCount > 0
-                      ? "text-rose-600 ring-rose-100"
-                      : "text-emerald-600 ring-emerald-100",
+                      ? "text-[#ff78b7] ring-[#6b3056]"
+                      : "text-[#5ee0b1] ring-[#245548]",
                   )}
                 >
                   {issueCount > 0 ? (
@@ -154,7 +158,7 @@ export default function DashboardShell({
                   <p
                     className={cx(
                       "text-sm font-semibold",
-                      issueCount > 0 ? "text-rose-800" : "text-emerald-800",
+                      issueCount > 0 ? "text-[#ff9fca]" : "text-[#83eac6]",
                     )}
                   >
                     {issueCount > 0
@@ -164,7 +168,7 @@ export default function DashboardShell({
                   <p
                     className={cx(
                       "mt-1 text-xs leading-5",
-                      issueCount > 0 ? "text-rose-700" : "text-emerald-700",
+                      issueCount > 0 ? "text-[#d989ae]" : "text-[#75bfa9]",
                     )}
                   >
                     {issueCount > 0
@@ -175,19 +179,19 @@ export default function DashboardShell({
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-blue-950/5">
+            <div className="rounded-lg border border-white/10 bg-[#151225] p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-700 text-sm font-semibold text-white shadow-sm shadow-blue-200">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#526dff] text-sm font-semibold text-white">
                   N
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">Nexus Admin</p>
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-[#817a90]">
                     admin@shipnexus.io
                   </p>
                 </div>
                 <ChevronDown
-                  className="h-4 w-4 text-slate-400"
+                  className="h-4 w-4 text-[#696276]"
                   aria-hidden={true}
                 />
               </div>
@@ -196,28 +200,28 @@ export default function DashboardShell({
         </aside>
 
         <main className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-[#f8fbff]/95 px-4 py-4 backdrop-blur md:px-6 xl:px-8">
+          <header className="z-20 border-b border-white/10 bg-[#171329]/95 px-4 py-4 backdrop-blur md:px-6 lg:sticky lg:top-0 xl:px-8">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
                 <div className="flex items-center gap-3 lg:hidden">
                   <Link
                     href="/dashboard"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-700 text-white shadow-sm shadow-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="flex h-10 w-10 items-center justify-center rounded-md bg-[#526dff] text-white focus:outline-none focus:ring-2 focus:ring-[#526dff] focus:ring-offset-2 focus:ring-offset-[#171329]"
                     aria-label="ShipNexus dashboard"
                   >
                     <Rocket className="h-5 w-5" aria-hidden={true} />
                   </Link>
                   <div>
                     <span className="text-base font-semibold">ShipNexus</span>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#817a90]">
                       Deployment Pipeline
                     </p>
                   </div>
                 </div>
-                <h1 className="mt-4 text-2xl font-semibold tracking-normal text-slate-950 lg:mt-0 md:text-3xl">
+                <h1 className="mt-4 text-2xl font-semibold tracking-normal text-white lg:mt-0 md:text-3xl">
                   {title}
                 </h1>
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-[#aaa4b5]">
                   {description}
                 </p>
               </div>
